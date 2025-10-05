@@ -215,10 +215,39 @@ export const SlashCommandPicker: React.FC<SlashCommandPickerProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Always load fresh commands from filesystem
+
+      // Load custom commands from filesystem
       const loadedCommands = await api.slashCommandsList(projectPath);
-      setCommands(loadedCommands);
+
+      // Add Claude Code REPL built-in commands
+      const replCommands: SlashCommand[] = [
+        { id: 'repl-add-dir', name: 'add-dir', full_command: '/add-dir', description: '添加其他工作目录', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-agents', name: 'agents', full_command: '/agents', description: '管理自定义AI子代理以执行专门任务', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-bug', name: 'bug', full_command: '/bug', description: '报告错误（将对话发送给Anthropic）', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-clear', name: 'clear', full_command: '/clear', description: '清除对话历史记录', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-compact', name: 'compact', full_command: '/compact', description: '紧凑的对话，带有可选的焦点指示', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: true },
+        { id: 'repl-config', name: 'config', full_command: '/config', description: '打开设置界面（配置选项卡）', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-cost', name: 'cost', full_command: '/cost', description: '显示令牌使用情况统计信息', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-doctor', name: 'doctor', full_command: '/doctor', description: '检查Claude Code安装的健康状况', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-help', name: 'help', full_command: '/help', description: '获取使用帮助', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-init', name: 'init', full_command: '/init', description: '使用CLAUDE.md指南初始化项目', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-login', name: 'login', full_command: '/login', description: '切换Anthropic帐户', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-logout', name: 'logout', full_command: '/logout', description: '退出您的Anthropic帐户', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-mcp', name: 'mcp', full_command: '/mcp', description: '管理MCP服务器连接和OAuth身份验证', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-memory', name: 'memory', full_command: '/memory', description: '编辑CLAUDE.md内存文件', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-model', name: 'model', full_command: '/model', description: '选择或更改AI模型', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-permissions', name: 'permissions', full_command: '/permissions', description: '查看或更新权限', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-pr_comments', name: 'pr_comments', full_command: '/pr_comments', description: '查看拉取请求评论', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-review', name: 'review', full_command: '/review', description: '请求代码审查', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-rewind', name: 'rewind', full_command: '/rewind', description: '回放对话和/或代码', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-status', name: 'status', full_command: '/status', description: '打开设置界面（状态选项卡），显示版本、型号、帐户和连接性', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-terminal-setup', name: 'terminal-setup', full_command: '/terminal-setup', description: '安装换行符的Shift+Enter键绑定（仅限iTerm2和VSCode）', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-usage', name: 'usage', full_command: '/usage', description: '显示计划使用限制和速率限制状态（仅限订阅计划）', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+        { id: 'repl-vim', name: 'vim', full_command: '/vim', description: '进入vim模式，交替切换插入模式和命令模式', scope: 'default', file_path: '', content: '', allowed_tools: [], has_bash_commands: false, has_file_references: false, accepts_arguments: false },
+      ];
+
+      // Combine REPL commands with custom commands
+      setCommands([...replCommands, ...loadedCommands]);
     } catch (err) {
       console.error("Failed to load slash commands:", err);
       setError(err instanceof Error ? err.message : 'Failed to load commands');
