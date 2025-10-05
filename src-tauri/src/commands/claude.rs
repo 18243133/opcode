@@ -286,16 +286,24 @@ fn create_system_command(
     project_path: &str,
 ) -> Command {
     let mut cmd = create_command_with_env(claude_path);
-    
+
     // Add all arguments
     for arg in args {
         cmd.arg(arg);
     }
-    
+
     cmd.current_dir(project_path)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
-    
+
+    // Hide console window on Windows
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
     cmd
 }
 
