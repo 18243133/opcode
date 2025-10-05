@@ -627,6 +627,14 @@ pub async fn mcp_serve(app: AppHandle) -> Result<String, String> {
     let mut cmd = create_command_with_env(&claude_path);
     cmd.arg("mcp").arg("serve");
 
+    // Hide console window on Windows
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
     match cmd.spawn() {
         Ok(_) => {
             info!("Successfully started Claude Code MCP server");
