@@ -237,7 +237,7 @@ const FloatingPromptInputInner = (
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const expandedTextareaRef = useRef<HTMLTextAreaElement>(null);
   const unlistenDragDropRef = useRef<(() => void) | null>(null);
-  const [textareaHeight, setTextareaHeight] = useState<number>(48);
+  const [textareaHeight, setTextareaHeight] = useState<number>(80);
 
   // Expose a method to add images programmatically
   React.useImperativeHandle(
@@ -347,7 +347,8 @@ const FloatingPromptInputInner = (
     if (textareaRef.current && !isExpanded) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      const newHeight = Math.min(Math.max(scrollHeight, 48), 240);
+      // Increased min height to 80px (about 3 lines) and max to 400px (about 16 lines)
+      const newHeight = Math.min(Math.max(scrollHeight, 80), 400);
       setTextareaHeight(newHeight);
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -466,8 +467,8 @@ const FloatingPromptInputInner = (
       // Reset height to auto to get the actual scrollHeight
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      // Set min height to 48px and max to 240px (about 10 lines)
-      const newHeight = Math.min(Math.max(scrollHeight, 48), 240);
+      // Increased min height to 80px (about 3 lines) and max to 400px (about 16 lines)
+      const newHeight = Math.min(Math.max(scrollHeight, 80), 400);
       setTextareaHeight(newHeight);
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -1171,11 +1172,11 @@ const FloatingPromptInputInner = (
                   className={cn(
                     "resize-none pr-20 pl-3 py-2.5 transition-all duration-150",
                     dragActive && "border-primary",
-                    textareaHeight >= 240 && "overflow-y-auto scrollbar-thin"
+                    textareaHeight >= 400 && "overflow-y-auto scrollbar-thin"
                   )}
-                  style={{ 
+                  style={{
                     height: `${textareaHeight}px`,
-                    overflowY: textareaHeight >= 240 ? 'auto' : 'hidden'
+                    overflowY: textareaHeight >= 400 ? 'auto' : 'hidden'
                   }}
                 />
 

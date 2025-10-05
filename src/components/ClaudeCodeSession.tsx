@@ -879,17 +879,42 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
           session_age_ms: sessionAge
         });
 
+        // Check if this is a Claude Code REPL slash command
+        const isReplCommand = prompt.trim().startsWith('/');
+        const replCommands = [
+          '/add-dir', '/agents', '/bug', '/clear', '/compact', '/config', '/cost',
+          '/doctor', '/help', '/init', '/login', '/logout', '/mcp', '/memory',
+          '/model', '/permissions', '/pr_comments', '/review', '/rewind', '/status',
+          '/terminal-setup', '/usage', '/vim'
+        ];
+
+        const isBuiltInCommand = isReplCommand && replCommands.some(cmd =>
+          prompt.trim().startsWith(cmd)
+        );
+
         // Execute the appropriate command
         if (effectiveSession && !isFirstPrompt) {
           console.log('[ClaudeCodeSession] Resuming session:', effectiveSession.id);
           trackEvent.sessionResumed(effectiveSession.id);
           trackEvent.modelSelected(model);
+
+          // For built-in REPL commands, pass them directly to Claude CLI
+          if (isBuiltInCommand) {
+            console.log('[ClaudeCodeSession] Executing REPL command:', prompt.trim().split(' ')[0]);
+          }
+
           await api.resumeClaudeCode(projectPath, effectiveSession.id, prompt, model);
         } else {
           console.log('[ClaudeCodeSession] Starting new session');
           setIsFirstPrompt(false);
           trackEvent.sessionCreated(model, 'prompt_input');
           trackEvent.modelSelected(model);
+
+          // For built-in REPL commands, pass them directly to Claude CLI
+          if (isBuiltInCommand) {
+            console.log('[ClaudeCodeSession] Executing REPL command:', prompt.trim().split(' ')[0]);
+          }
+
           await api.executeClaudeCode(projectPath, prompt, model);
         }
       }
