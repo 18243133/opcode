@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, Loader2, ChevronDown, Zap, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, Loader2, ChevronDown, Zap, AlertCircle, Brain, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +48,7 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
   const [selectedIcon, setSelectedIcon] = useState<AgentIconName>((agent?.icon as AgentIconName) || "bot");
   const [systemPrompt, setSystemPrompt] = useState(agent?.system_prompt || "");
   const [defaultTask, setDefaultTask] = useState(agent?.default_task || "");
-  const [model, setModel] = useState(agent?.model || "sonnet");
+  const [model, setModel] = useState(agent?.model || "claude-sonnet-4-5-20250929");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -241,48 +241,72 @@ export const CreateAgent: React.FC<CreateAgentProps> = ({
                 <div className="flex flex-col sm:flex-row gap-2">
                   <motion.button
                     type="button"
-                    onClick={() => setModel("sonnet")}
+                    onClick={() => setModel("claude-sonnet-4-5-20250929")}
                     whileTap={{ scale: 0.97 }}
                     transition={{ duration: 0.15 }}
                     className={cn(
                       "flex-1 px-4 py-3 rounded-md border transition-all",
-                      model === "sonnet" 
-                        ? "border-primary bg-primary/10 text-primary" 
+                      model === "claude-sonnet-4-5-20250929"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Zap className={cn(
+                      <Sparkles className={cn(
                         "h-4 w-4",
-                        model === "sonnet" ? "text-primary" : "text-muted-foreground"
+                        model === "claude-sonnet-4-5-20250929" ? "text-primary" : "text-muted-foreground"
                       )} />
                       <div className="text-left">
-                        <div className="text-body-small font-medium">Claude 4 Sonnet</div>
-                        <div className="text-caption text-muted-foreground">Faster, efficient for most tasks</div>
+                        <div className="text-body-small font-medium">Claude Sonnet 4.5</div>
+                        <div className="text-caption text-muted-foreground">Latest Sonnet 4.5 - Best balance of speed and capability</div>
                       </div>
                     </div>
                   </motion.button>
-                  
+
                   <motion.button
                     type="button"
-                    onClick={() => setModel("opus")}
+                    onClick={() => setModel("claude-opus-4-20250514")}
                     whileTap={{ scale: 0.97 }}
                     transition={{ duration: 0.15 }}
                     className={cn(
                       "flex-1 px-4 py-3 rounded-md border transition-all",
-                      model === "opus" 
-                        ? "border-primary bg-primary/10 text-primary" 
+                      model === "claude-opus-4-20250514"
+                        ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/50 hover:bg-accent"
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <Zap className={cn(
                         "h-4 w-4",
-                        model === "opus" ? "text-primary" : "text-muted-foreground"
+                        model === "claude-opus-4-20250514" ? "text-primary" : "text-muted-foreground"
                       )} />
                       <div className="text-left">
                         <div className="text-body-small font-medium">Claude 4 Opus</div>
                         <div className="text-caption text-muted-foreground">More capable, better for complex tasks</div>
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => setModel("opusplan")}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                    className={cn(
+                      "flex-1 px-4 py-3 rounded-md border transition-all",
+                      model === "opusplan"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/50 hover:bg-accent"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Brain className={cn(
+                        "h-4 w-4",
+                        model === "opusplan" ? "text-primary" : "text-muted-foreground"
+                      )} />
+                      <div className="text-left">
+                        <div className="text-body-small font-medium">Claude 4 Opus Plan</div>
+                        <div className="text-caption text-muted-foreground">Opus Plan Mode - Use Opus 4.1 in plan mode, Sonnet 4 otherwise</div>
                       </div>
                     </div>
                   </motion.button>

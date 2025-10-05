@@ -109,14 +109,14 @@ fn calculate_cost(model: &str, usage: &UsageData) -> f64 {
 
     // Calculate cost based on model
     let (input_price, output_price, cache_write_price, cache_read_price) =
-        if model.contains("opus-4") || model.contains("claude-opus-4") {
+        if model.contains("opus-4") || model.contains("claude-opus-4") || model.contains("opusplan") {
             (
                 OPUS_4_INPUT_PRICE,
                 OPUS_4_OUTPUT_PRICE,
                 OPUS_4_CACHE_WRITE_PRICE,
                 OPUS_4_CACHE_READ_PRICE,
             )
-        } else if model.contains("sonnet-4") || model.contains("claude-sonnet-4") {
+        } else if model.contains("sonnet-4") || model.contains("claude-sonnet-4") || model.contains("sonnet45") {
             (
                 SONNET_4_INPUT_PRICE,
                 SONNET_4_OUTPUT_PRICE,

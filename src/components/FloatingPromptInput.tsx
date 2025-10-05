@@ -29,7 +29,7 @@ interface FloatingPromptInputProps {
   /**
    * Callback when prompt is sent
    */
-  onSend: (prompt: string, model: "sonnet" | "opus") => void;
+  onSend: (prompt: string, model: string) => void;
   /**
    * Whether the input is loading
    */
@@ -41,7 +41,7 @@ interface FloatingPromptInputProps {
   /**
    * Default model to select
    */
-  defaultModel?: "sonnet" | "opus";
+  defaultModel?: string;
   /**
    * Project path for file picker
    */
@@ -161,7 +161,7 @@ const ThinkingModeIndicator: React.FC<{ level: number; color?: string }> = ({ le
 };
 
 type Model = {
-  id: "sonnet" | "opus";
+  id: string;
   name: string;
   description: string;
   icon: React.ReactNode;
@@ -171,19 +171,27 @@ type Model = {
 
 const MODELS: Model[] = [
   {
-    id: "sonnet",
-    name: "Claude 4 Sonnet",
-    description: "Faster, efficient for most tasks",
-    icon: <Zap className="h-3.5 w-3.5" />,
-    shortName: "S",
+    id: "claude-sonnet-4-5-20250929",
+    name: "Claude Sonnet 4.5",
+    description: "Latest Sonnet 4.5 - Best balance of speed and capability",
+    icon: <Sparkles className="h-3.5 w-3.5" />,
+    shortName: "S4.5",
     color: "text-primary"
   },
   {
-    id: "opus",
+    id: "claude-opus-4-20250514",
     name: "Claude 4 Opus",
     description: "More capable, better for complex tasks",
     icon: <Zap className="h-3.5 w-3.5" />,
     shortName: "O",
+    color: "text-primary"
+  },
+  {
+    id: "opusplan",
+    name: "Claude 4 Opus Plan",
+    description: "Opus Plan Mode - Use Opus 4.1 in plan mode, Sonnet 4 otherwise",
+    icon: <Brain className="h-3.5 w-3.5" />,
+    shortName: "OP",
     color: "text-primary"
   }
 ];
@@ -204,7 +212,7 @@ const FloatingPromptInputInner = (
     onSend,
     isLoading = false,
     disabled = false,
-    defaultModel = "sonnet",
+    defaultModel = "claude-sonnet-4-5-20250929",
     projectPath,
     className,
     onCancel,
@@ -213,7 +221,7 @@ const FloatingPromptInputInner = (
   ref: React.Ref<FloatingPromptInputRef>,
 ) => {
   const [prompt, setPrompt] = useState("");
-  const [selectedModel, setSelectedModel] = useState<"sonnet" | "opus">(defaultModel);
+  const [selectedModel, setSelectedModel] = useState<string>(defaultModel);
   const [selectedThinkingMode, setSelectedThinkingMode] = useState<ThinkingMode>("auto");
   const [isExpanded, setIsExpanded] = useState(false);
   const [modelPickerOpen, setModelPickerOpen] = useState(false);

@@ -1,0 +1,111 @@
+{
+  "settings": {
+    "title": "设置",
+    "general": {
+      "title": "常规",
+      "language": "语言",
+      "theme": "主题",
+      "notifications": "通知"
+    },
+    "permissions": {
+      "title": "权限",
+      "description": "管理应用程序权限和访问控制",
+      "filesystem": "文件系统访问",
+      "network": "网络访问",
+      "camera": "摄像头访问",
+      "microphone": "麦克风访问"
+    },
+    "environment": {
+      "title": "环境变量",
+      "description": "配置应用程序的环境变量",
+      "addVariable": "添加变量",
+      "name": "名称",
+      "value": "值",
+      "actions": "操作"
+    },
+    "advanced": {
+      "title": "高级",
+      "description": "高级配置选项",
+      "developerMode": "开发者模式",
+      "debugLogging": "调试日志",
+      "experimentalFeatures": "实验性功能"
+    },
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "hooks": {
+    "title": "钩子",
+    "description": "配置Git钩子和自动化脚本"
+  },
+  "commands": {
+    "title": "斜杠命令",
+    "projectTitle": "项目斜杠命令",
+    "description": "创建自定义命令来简化您的工作流程",
+    "projectDescription": "为此项目创建自定义命令",
+    "newCommand": "新建命令",
+    "searchPlaceholder": "搜索命令...",
+    "groups": {
+      "user": "用户命令",
+      "project": "项目命令"
+    },
+    "scopes": {
+      "all": "所有命令",
+      "project": "项目",
+      "user": "用户"
+    },
+    "status": {
+      "noCommands": "未找到命令",
+      "noProjectCommands": "尚未创建项目命令",
+      "noUserCommands": "尚未创建命令",
+      "createFirst": "创建您的第一个命令",
+      "createFirstProject": "创建您的第一个项目命令"
+    },
+    "badges": {
+      "arguments": "参数",
+      "bash": "Bash",
+      "files": "文件"
+    },
+    "tools": {
+      "count": "个工具"
+    },
+    "actions": {
+      "hideContent": "隐藏内容",
+      "showContent": "显示内容"
+    },
+    "form": {
+      "editTitle": "编辑命令",
+      "createTitle": "创建新命令",
+      "scope": "作用域",
+      "scopeUser": "用户（全局）",
+      "scopeProject": "项目",
+      "scopeDescription": {
+        "user": "在所有项目中可用",
+        "project": "仅在此项目中可用"
+      },
+      "nameRequired": "命令名称*",
+      "namePlaceholder": "例如：review, fix-issue",
+      "namespace": "命名空间（可选）",
+      "namespacePlaceholder": "例如：frontend, backend",
+      "description": "描述（可选）",
+      "descriptionPlaceholder": "简要描述此命令的功能",
+      "contentRequired": "命令内容*",
+      "contentPlaceholder": "输入提示内容。使用 $ARGUMENTS 表示动态值。",
+      "contentHelp": "使用 $ARGUMENTS 表示用户输入，@filename 表示文件，!`command` 表示bash命令",
+      "allowedTools": "允许的工具",
+      "allowedToolsHelp": "选择Claude可以与此命令一起使用的工具",
+      "examples": "示例",
+      "preview": "预览",
+      "cancel": "取消",
+      "save": "保存",
+      "saving": "保存中..."
+    },
+    "delete": {
+      "title": "删除命令",
+      "confirmMessage": "您确定要删除此命令吗？",
+      "warningMessage": "此操作无法撤销。命令文件将被永久删除。",
+      "cancel": "取消",
+      "deleteButton": "删除",
+      "deleting": "删除中..."
+    }
+  }
+}

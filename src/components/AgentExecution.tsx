@@ -90,7 +90,7 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
 }) => {
   const [projectPath] = useState(initialProjectPath || "");
   const [task, setTask] = useState(agent.default_task || "");
-  const [model, setModel] = useState(agent.model || "sonnet");
+  const [model, setModel] = useState(agent.model || "claude-sonnet-4-5-20250929");
   const [isRunning, setIsRunning] = useState(false);
   
   // Get tab state functions
@@ -497,7 +497,7 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
   const handleCopyAsMarkdown = async () => {
     let markdown = `# Agent Execution: ${agent.name}\n\n`;
     markdown += `**Task:** ${task}\n`;
-    markdown += `**Model:** ${model === 'opus' ? 'Claude 4 Opus' : 'Claude 4 Sonnet'}\n`;
+    markdown += `**Model:** ${model === 'claude-opus-4-20250514' ? 'Claude 4 Opus' : model === 'opusplan' ? 'Claude 4 Opus Plan' : 'Claude Sonnet 4.5'}\n`;
     markdown += `**Date:** ${new Date().toISOString()}\n\n`;
     markdown += `---\n\n`;
 
@@ -581,7 +581,7 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
               <div>
                 <h1 className="text-heading-1">{agent.name}</h1>
                 <p className="mt-1 text-body-small text-muted-foreground">
-                  {isRunning ? 'Running' : messages.length > 0 ? 'Complete' : 'Ready'} • {model === 'opus' ? 'Claude 4 Opus' : 'Claude 4 Sonnet'}
+                  {isRunning ? 'Running' : messages.length > 0 ? 'Complete' : 'Ready'} • {model === 'claude-opus-4-20250514' ? 'Claude 4 Opus' : model === 'opusplan' ? 'Claude 4 Opus Plan' : 'Claude Sonnet 4.5'}
                 </p>
               </div>
             </div>
@@ -623,13 +623,13 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
               <div className="flex gap-2">
                 <motion.button
                   type="button"
-                  onClick={() => !isRunning && setModel("sonnet")}
+                  onClick={() => !isRunning && setModel("claude-sonnet-4-5-20250929")}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.15 }}
                   className={cn(
                     "flex-1 px-4 py-3 rounded-md border transition-all",
-                    model === "sonnet" 
-                      ? "border-primary bg-primary/10 text-primary" 
+                    model === "claude-sonnet-4-5-20250929"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50 hover:bg-accent",
                     isRunning && "opacity-50 cursor-not-allowed"
                   )}
@@ -638,28 +638,28 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                      model === "sonnet" ? "border-primary" : "border-muted-foreground"
+                      model === "claude-sonnet-4-5-20250929" ? "border-primary" : "border-muted-foreground"
                     )}>
-                      {model === "sonnet" && (
+                      {model === "claude-sonnet-4-5-20250929" && (
                         <div className="w-2 h-2 rounded-full bg-primary" />
                       )}
                     </div>
                     <div className="text-left">
-                      <div className="text-body-small font-medium">Claude 4 Sonnet</div>
-                      <div className="text-caption text-muted-foreground">Faster, efficient</div>
+                      <div className="text-body-small font-medium">Claude Sonnet 4.5</div>
+                      <div className="text-caption text-muted-foreground">Latest & fastest</div>
                     </div>
                   </div>
                 </motion.button>
-                
+
                 <motion.button
                   type="button"
-                  onClick={() => !isRunning && setModel("opus")}
+                  onClick={() => !isRunning && setModel("claude-opus-4-20250514")}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.15 }}
                   className={cn(
                     "flex-1 px-4 py-3 rounded-md border transition-all",
-                    model === "opus" 
-                      ? "border-primary bg-primary/10 text-primary" 
+                    model === "claude-opus-4-20250514"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/50 hover:bg-accent",
                     isRunning && "opacity-50 cursor-not-allowed"
                   )}
@@ -668,15 +668,45 @@ export const AgentExecution: React.FC<AgentExecutionProps> = ({
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                      model === "opus" ? "border-primary" : "border-muted-foreground"
+                      model === "claude-opus-4-20250514" ? "border-primary" : "border-muted-foreground"
                     )}>
-                      {model === "opus" && (
+                      {model === "claude-opus-4-20250514" && (
                         <div className="w-2 h-2 rounded-full bg-primary" />
                       )}
                     </div>
                     <div className="text-left">
                       <div className="text-body-small font-medium">Claude 4 Opus</div>
                       <div className="text-caption text-muted-foreground">More capable</div>
+                    </div>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  type="button"
+                  onClick={() => !isRunning && setModel("opusplan")}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className={cn(
+                    "flex-1 px-4 py-3 rounded-md border transition-all",
+                    model === "opusplan"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border hover:border-primary/50 hover:bg-accent",
+                    isRunning && "opacity-50 cursor-not-allowed"
+                  )}
+                  disabled={isRunning}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                      model === "opusplan" ? "border-primary" : "border-muted-foreground"
+                    )}>
+                      {model === "opusplan" && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-body-small font-medium">Claude 4 Opus Plan</div>
+                      <div className="text-caption text-muted-foreground">Plan mode</div>
                     </div>
                   </div>
                 </motion.button>

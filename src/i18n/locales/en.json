@@ -1,0 +1,111 @@
+{
+  "settings": {
+    "title": "Settings",
+    "general": {
+      "title": "General",
+      "language": "Language",
+      "theme": "Theme",
+      "notifications": "Notifications"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "description": "Manage application permissions and access controls",
+      "filesystem": "File System Access",
+      "network": "Network Access",
+      "camera": "Camera Access",
+      "microphone": "Microphone Access"
+    },
+    "environment": {
+      "title": "Environment Variables",
+      "description": "Configure environment variables for the application",
+      "addVariable": "Add Variable",
+      "name": "Name",
+      "value": "Value",
+      "actions": "Actions"
+    },
+    "advanced": {
+      "title": "Advanced",
+      "description": "Advanced configuration options",
+      "developerMode": "Developer Mode",
+      "debugLogging": "Debug Logging",
+      "experimentalFeatures": "Experimental Features"
+    },
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "hooks": {
+    "title": "Hooks",
+    "description": "Configure Git hooks and automation scripts"
+  },
+  "commands": {
+    "title": "Slash Commands",
+    "projectTitle": "Project Slash Commands",
+    "description": "Create custom commands to streamline your workflow",
+    "projectDescription": "Create custom commands for this project",
+    "newCommand": "New Command",
+    "searchPlaceholder": "Search commands...",
+    "groups": {
+      "user": "User Commands",
+      "project": "Project Commands"
+    },
+    "scopes": {
+      "all": "All Commands",
+      "project": "Project",
+      "user": "User"
+    },
+    "status": {
+      "noCommands": "No commands found",
+      "noProjectCommands": "No project commands created yet",
+      "noUserCommands": "No commands created yet",
+      "createFirst": "Create your first command",
+      "createFirstProject": "Create your first project command"
+    },
+    "badges": {
+      "arguments": "Arguments",
+      "bash": "Bash",
+      "files": "Files"
+    },
+    "tools": {
+      "count": "tool(s)"
+    },
+    "actions": {
+      "hideContent": "Hide content",
+      "showContent": "Show content"
+    },
+    "form": {
+      "editTitle": "Edit Command",
+      "createTitle": "Create New Command",
+      "scope": "Scope",
+      "scopeUser": "User (Global)",
+      "scopeProject": "Project",
+      "scopeDescription": {
+        "user": "Available across all projects",
+        "project": "Only available in this project"
+      },
+      "nameRequired": "Command Name*",
+      "namePlaceholder": "e.g., review, fix-issue",
+      "namespace": "Namespace (Optional)",
+      "namespacePlaceholder": "e.g., frontend, backend",
+      "description": "Description (Optional)",
+      "descriptionPlaceholder": "Brief description of what this command does",
+      "contentRequired": "Command Content*",
+      "contentPlaceholder": "Enter the prompt content. Use $ARGUMENTS for dynamic values.",
+      "contentHelp": "Use $ARGUMENTS for user input, @filename for files, and !`command` for bash commands",
+      "allowedTools": "Allowed Tools",
+      "allowedToolsHelp": "Select which tools Claude can use with this command",
+      "examples": "Examples",
+      "preview": "Preview",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "delete": {
+      "title": "Delete Command",
+      "confirmMessage": "Are you sure you want to delete this command?",
+      "warningMessage": "This action cannot be undone. The command file will be permanently deleted.",
+      "cancel": "Cancel",
+      "deleteButton": "Delete",
+      "deleting": "Deleting..."
+    }
+  }
+}

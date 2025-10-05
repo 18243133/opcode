@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Copy,
   ChevronDown,
   GitBranch,
   ChevronUp,
   X,
   Hash,
-  Wrench
+  Wrench,
+  Brain,
+  Terminal,
+  Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,7 +97,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   const [forkSessionName, setForkSessionName] = useState("");
   
   // Queued prompts state
-  const [queuedPrompts, setQueuedPrompts] = useState<Array<{ id: string; prompt: string; model: "sonnet" | "opus" }>>([]);
+  const [queuedPrompts, setQueuedPrompts] = useState<Array<{ id: string; prompt: string; model: string }>>([]);
   
   // New state for preview feature
   const [showPreview, setShowPreview] = useState(false);
@@ -105,12 +108,15 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   
   // Add collapsed state for queued prompts
   const [queuedPromptsCollapsed, setQueuedPromptsCollapsed] = useState(false);
-  
+
+  // Auto-scroll state
+  const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
+
   const parentRef = useRef<HTMLDivElement>(null);
   const unlistenRefs = useRef<UnlistenFn[]>([]);
   const hasActiveSessionRef = useRef(false);
   const floatingPromptRef = useRef<FloatingPromptInputRef>(null);
-  const queuedPromptsRef = useRef<Array<{ id: string; prompt: string; model: "sonnet" | "opus" }>>([]);
+  const queuedPromptsRef = useRef<Array<{ id: string; prompt: string; model: string }>>([]);
   const isMountedRef = useRef(true);
   const isListeningRef = useRef(false);
   const sessionStartTime = useRef<number>(Date.now());
@@ -271,12 +277,83 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     onStreamingChange?.(isLoading, claudeSessionId);
   }, [isLoading, claudeSessionId, onStreamingChange]);
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (displayableMessages.length > 0) {
-      rowVirtualizer.scrollToIndex(displayableMessages.length - 1, { align: 'end', behavior: 'smooth' });
+  // Check if user is at bottom of scroll
+  const isAtBottom = () => {
+    const container = parentRef.current;
+    if (!container) return true;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    return distanceFromBottom < 100; // 100px threshold
+  };
+
+  // Handle scroll events to detect user scrolling
+  const handleScroll = () => {
+    if (!parentRef.current) return;
+
+    const atBottom = isAtBottom();
+
+    // If user scrolls to bottom, re-enable auto-scroll
+    if (atBottom && userHasScrolledUp) {
+      setUserHasScrolledUp(false);
     }
-  }, [displayableMessages.length, rowVirtualizer]);
+    // If user scrolls up from bottom, disable auto-scroll
+    else if (!atBottom && !userHasScrolledUp) {
+      setUserHasScrolledUp(true);
+    }
+  };
+
+  // Auto-scroll to bottom when new messages arrive (only if user hasn't scrolled up)
+  useEffect(() => {
+    if (displayableMessages.length > 0 && !userHasScrolledUp) {
+      // Use a small delay to ensure DOM is updated
+      const timeoutId = setTimeout(() => {
+        if (parentRef.current) {
+          // Scroll to bottom of container
+          parentRef.current.scrollTo({
+            top: parentRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages, userHasScrolledUp]); // Changed to depend on messages array instead of length
+
+  // Get current loading status based on last message
+  const getLoadingStatus = () => {
+    if (!isLoading || messages.length === 0) {
+      return { text: "Processing...", icon: "default" };
+    }
+
+    // Check the last few messages to determine current state
+    const recentMessages = messages.slice(-5);
+
+    // Check if we're waiting for a tool result
+    for (let i = recentMessages.length - 1; i >= 0; i--) {
+      const msg = recentMessages[i];
+
+      // Check for tool use in assistant messages
+      if (msg.type === "assistant" && msg.message?.content) {
+        const contents = Array.isArray(msg.message.content) ? msg.message.content : [];
+
+        // Find the last tool use
+        for (let j = contents.length - 1; j >= 0; j--) {
+          const content = contents[j];
+
+          if (content.type === "thinking") {
+            return { text: "Thinking...", icon: "thinking" };
+          }
+
+          if (content.type === "tool_use") {
+            const toolName = content.name || "tool";
+            return { text: `Using ${toolName}...`, icon: "tool" };
+          }
+        }
+      }
+    }
+
+    return { text: "Processing...", icon: "default" };
+  };
 
   // Calculate total tokens from messages
   useEffect(() => {
@@ -322,8 +399,9 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
       
       // After loading history, we're continuing a conversation
       setIsFirstPrompt(false);
-      
-      // Scroll to bottom after loading history
+
+      // Reset auto-scroll state and scroll to bottom after loading history
+      setUserHasScrolledUp(false);
       setTimeout(() => {
         if (loadedMessages.length > 0) {
           rowVirtualizer.scrollToIndex(loadedMessages.length - 1, { align: 'end', behavior: 'auto' });
@@ -430,7 +508,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
 
   // Project path selection handled by parent tab controls
 
-  const handleSendPrompt = async (prompt: string, model: "sonnet" | "opus") => {
+  const handleSendPrompt = async (prompt: string, model: string) => {
     console.log('[ClaudeCodeSession] handleSendPrompt called with:', { prompt, model, projectPath, claudeSessionId, effectiveSession });
     
     if (!projectPath) {
@@ -453,6 +531,9 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
       setIsLoading(true);
       setError(null);
       hasActiveSessionRef.current = true;
+
+      // Reset auto-scroll when sending new prompt
+      setUserHasScrolledUp(false);
       
       // For resuming sessions, ensure we have the session ID
       if (effectiveSession && !claudeSessionId) {
@@ -1142,6 +1223,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     <div
       ref={parentRef}
       className="flex-1 overflow-y-auto relative pb-40"
+      onScroll={handleScroll}
       style={{
         contain: 'strict',
       }}
@@ -1187,9 +1269,34 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15 }}
-          className="flex items-center justify-center py-4 mb-40"
+          className="flex flex-col items-center justify-center py-6 mb-40 gap-3"
         >
-          <div className="rotating-symbol text-primary" />
+          {(() => {
+            const status = getLoadingStatus();
+            return (
+              <>
+                <div className="flex items-center gap-3">
+                  {status.icon === "thinking" && (
+                    <Brain className="h-5 w-5 text-primary animate-pulse" />
+                  )}
+                  {status.icon === "tool" && (
+                    <Terminal className="h-5 w-5 text-primary animate-pulse" />
+                  )}
+                  {status.icon === "default" && (
+                    <Zap className="h-5 w-5 text-primary animate-pulse" />
+                  )}
+                  <span className="text-sm text-muted-foreground font-medium">
+                    {status.text}
+                  </span>
+                </div>
+                <div className="flex gap-1">
+                  <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </>
+            );
+          })()}
         </motion.div>
       )}
 
