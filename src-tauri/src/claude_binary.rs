@@ -168,7 +168,18 @@ fn discover_system_installations() -> Vec<ClaudeInstallation> {
 fn try_which_command() -> Option<ClaudeInstallation> {
     debug!("Trying 'which claude' to find binary...");
 
-    match Command::new("which").arg("claude").output() {
+    let mut cmd = Command::new("which");
+    cmd.arg("claude");
+
+    // Hide console window on Windows
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    match cmd.output() {
         Ok(output) if output.status.success() => {
             let output_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
@@ -313,7 +324,18 @@ fn find_standard_installations() -> Vec<ClaudeInstallation> {
     }
 
     // Also check if claude is available in PATH (without full path)
-    if let Ok(output) = Command::new("claude").arg("--version").output() {
+    let mut cmd = Command::new("claude");
+    cmd.arg("--version");
+
+    // Hide console window on Windows
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    if let Ok(output) = cmd.output() {
         if output.status.success() {
             debug!("claude is available in PATH");
             let version = extract_version_from_output(&output.stdout);
@@ -332,7 +354,18 @@ fn find_standard_installations() -> Vec<ClaudeInstallation> {
 
 /// Get Claude version by running --version command
 fn get_claude_version(path: &str) -> Result<Option<String>, String> {
-    match Command::new(path).arg("--version").output() {
+    let mut cmd = Command::new(path);
+    cmd.arg("--version");
+
+    // Hide console window on Windows
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    match cmd.output() {
         Ok(output) => {
             if output.status.success() {
                 Ok(extract_version_from_output(&output.stdout))
