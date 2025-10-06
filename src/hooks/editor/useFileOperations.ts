@@ -59,8 +59,11 @@ export function useFileOperations(): UseFileOperationsReturn {
   }, []);
 
   const readFile = useCallback(async (path: string): Promise<string> => {
+    console.log('[useFileOperations] Reading file:', path);
     return handleOperation(async () => {
-      return await invoke<string>('read_file_content', { path });
+      const content = await invoke<string>('read_file_content', { path });
+      console.log('[useFileOperations] File read successfully, length:', content?.length);
+      return content;
     });
   }, [handleOperation]);
 

@@ -90,25 +90,33 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
    * Handle file click in tree
    */
   const handleFileClick = useCallback(async (filePath: string) => {
+    console.log('[CodeEditorView] File clicked:', filePath);
     try {
       // Check if it's a directory
       const isDir = await fileOps.isDirectory(filePath);
+      console.log('[CodeEditorView] Is directory:', isDir);
       if (isDir) {
         // Expand/collapse directory (handled by FileTree component)
         return;
       }
 
       // Read file content
+      console.log('[CodeEditorView] Reading file content...');
       const content = await fileOps.readFile(filePath);
+      console.log('[CodeEditorView] File content read, length:', content?.length);
+
       const language = getLanguageFromPath(filePath);
-      
+      console.log('[CodeEditorView] Detected language:', language);
+
       // Open in editor
+      console.log('[CodeEditorView] Opening file in editor...');
       openFile(filePath, content, language);
-      
+      console.log('[CodeEditorView] File opened successfully');
+
       // Notify parent
       onFileOpen?.(filePath);
     } catch (error) {
-      console.error('Failed to open file:', error);
+      console.error('[CodeEditorView] Failed to open file:', error);
     }
   }, [fileOps, openFile, onFileOpen]);
 

@@ -25,7 +25,7 @@ import { TabContent } from "@/components/TabContent";
 import { useTabState } from "@/hooks/useTabState";
 import { useAppLifecycle, useTrackEvent } from "@/hooks";
 import { StartupIntro } from "@/components/StartupIntro";
-import { CodeEditorView } from "@/components/CodeEditor";
+import { CodeEditorWithClaude } from "@/components/CodeEditor";
 
 type View =
   | "welcome"
@@ -344,8 +344,10 @@ function AppContent() {
 
       case "code-editor":
         return (
-          <CodeEditorView
+          <CodeEditorWithClaude
             initialDirectory={selectedProject?.path}
+            sessionId={selectedProject?.id}
+            projectId={selectedProject?.id}
           />
         );
 
@@ -382,11 +384,26 @@ function AppContent() {
     <div className="h-screen flex flex-col">
       {/* Custom Titlebar */}
       <CustomTitlebar
-        onAgentsClick={() => createAgentsTab()}
-        onUsageClick={() => createUsageTab()}
-        onClaudeClick={() => createClaudeMdTab()}
-        onMCPClick={() => createMCPTab()}
-        onSettingsClick={() => createSettingsTab()}
+        onAgentsClick={() => {
+          createAgentsTab();
+          setView("tabs");
+        }}
+        onUsageClick={() => {
+          createUsageTab();
+          setView("tabs");
+        }}
+        onClaudeClick={() => {
+          createClaudeMdTab();
+          setView("tabs");
+        }}
+        onMCPClick={() => {
+          createMCPTab();
+          setView("tabs");
+        }}
+        onSettingsClick={() => {
+          createSettingsTab();
+          setView("tabs");
+        }}
         onInfoClick={() => setShowNFO(true)}
         onCodeEditorClick={() => setView("code-editor")}
       />

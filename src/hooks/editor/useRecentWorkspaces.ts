@@ -17,14 +17,19 @@ export function useRecentWorkspaces() {
 
   // Load recent workspaces from localStorage
   useEffect(() => {
+    console.log('[useRecentWorkspaces] Loading from localStorage, key:', STORAGE_KEY);
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+      console.log('[useRecentWorkspaces] Stored data:', stored);
       if (stored) {
         const workspaces = JSON.parse(stored) as RecentWorkspace[];
+        console.log('[useRecentWorkspaces] Loaded workspaces:', workspaces);
         setRecentWorkspaces(workspaces);
+      } else {
+        console.log('[useRecentWorkspaces] No stored workspaces found');
       }
     } catch (error) {
-      console.error('Failed to load recent workspaces:', error);
+      console.error('[useRecentWorkspaces] Failed to load recent workspaces:', error);
     }
   }, []);
 
@@ -41,19 +46,21 @@ export function useRecentWorkspaces() {
    * Add a workspace to recent list
    */
   const addRecentWorkspace = useCallback((path: string) => {
+    console.log('[useRecentWorkspaces] Adding workspace:', path);
     const name = path.split(/[/\\]/).pop() || path;
     const now = Date.now();
 
     setRecentWorkspaces((prev) => {
       // Remove if already exists
       const filtered = prev.filter((w) => w.path !== path);
-      
+
       // Add to front
       const updated = [
         { path, name, lastOpened: now },
         ...filtered,
       ].slice(0, MAX_RECENT);
 
+      console.log('[useRecentWorkspaces] Updated workspaces:', updated);
       saveToStorage(updated);
       return updated;
     });

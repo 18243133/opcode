@@ -53,12 +53,14 @@ export function useEditorTabs(
    * Open a file in a new tab or switch to existing tab
    */
   const openFile = useCallback((filePath: string, content: string, language: string) => {
+    console.log('[useEditorTabs] Opening file:', { filePath, contentLength: content?.length, language });
     setTabs(prevTabs => {
       // Check if file is already open
       const existingTab = prevTabs.find(t => t.filePath === filePath);
-      
+
       if (existingTab) {
         // Switch to existing tab
+        console.log('[useEditorTabs] File already open, switching to tab:', existingTab.id);
         setActiveTabId(existingTab.id);
         return prevTabs;
       }
@@ -75,6 +77,7 @@ export function useEditorTabs(
         isDirty: false,
       };
 
+      console.log('[useEditorTabs] Created new tab:', newTab.id);
       setActiveTabId(newTab.id);
       return [...prevTabs, newTab];
     });
