@@ -388,6 +388,7 @@ function AppContent() {
         onMCPClick={() => createMCPTab()}
         onSettingsClick={() => createSettingsTab()}
         onInfoClick={() => setShowNFO(true)}
+        onCodeEditorClick={() => setView("code-editor")}
       />
       
       {/* Topbar - Commented out since navigation moved to titlebar */}

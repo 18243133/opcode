@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Minus, Square, X, Bot, BarChart3, FileText, Network, Info, MoreVertical } from 'lucide-react';
+import { Settings, Minus, Square, X, Bot, BarChart3, FileText, Network, Info, MoreVertical, Code2 } from 'lucide-react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { TooltipProvider, TooltipSimple } from '@/components/ui/tooltip-modern';
 
@@ -11,6 +11,7 @@ interface CustomTitlebarProps {
   onClaudeClick?: () => void;
   onMCPClick?: () => void;
   onInfoClick?: () => void;
+  onCodeEditorClick?: () => void;
 }
 
 export const CustomTitlebar: React.FC<CustomTitlebarProps> = ({
@@ -19,7 +20,8 @@ export const CustomTitlebar: React.FC<CustomTitlebarProps> = ({
   onUsageClick,
   onClaudeClick,
   onMCPClick,
-  onInfoClick
+  onInfoClick,
+  onCodeEditorClick
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -200,6 +202,19 @@ export const CustomTitlebar: React.FC<CustomTitlebarProps> = ({
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-lg shadow-lg z-[250]">
                 <div className="py-1">
+                  {onCodeEditorClick && (
+                    <button
+                      onClick={() => {
+                        onCodeEditorClick();
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center gap-3"
+                    >
+                      <Code2 size={14} />
+                      <span>Code Editor</span>
+                    </button>
+                  )}
+
                   {onClaudeClick && (
                     <button
                       onClick={() => {
@@ -212,7 +227,7 @@ export const CustomTitlebar: React.FC<CustomTitlebarProps> = ({
                       <span>CLAUDE.md</span>
                     </button>
                   )}
-                  
+
                   {onMCPClick && (
                     <button
                       onClick={() => {
@@ -225,7 +240,7 @@ export const CustomTitlebar: React.FC<CustomTitlebarProps> = ({
                       <span>MCP Servers</span>
                     </button>
                   )}
-                  
+
                   {onInfoClick && (
                     <button
                       onClick={() => {
