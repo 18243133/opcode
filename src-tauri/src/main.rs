@@ -284,6 +284,19 @@ fn main() {
             // Proxy Settings
             get_proxy_settings,
             save_proxy_settings,
+
+            // File Operations
+            commands::file_operations::read_file_content,
+            commands::file_operations::write_file_content,
+            commands::file_operations::create_file,
+            commands::file_operations::delete_file,
+            commands::file_operations::rename_file,
+            commands::file_operations::create_directory,
+            commands::file_operations::list_directory,
+            commands::file_operations::list_directory_tree,
+            commands::file_operations::path_exists,
+            commands::file_operations::is_directory,
+            commands::file_operations::get_file_metadata,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

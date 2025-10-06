@@ -25,12 +25,13 @@ import { TabContent } from "@/components/TabContent";
 import { useTabState } from "@/hooks/useTabState";
 import { useAppLifecycle, useTrackEvent } from "@/hooks";
 import { StartupIntro } from "@/components/StartupIntro";
+import { CodeEditorView } from "@/components/CodeEditor";
 
-type View = 
-  | "welcome" 
-  | "projects" 
-  | "editor" 
-  | "claude-file-editor" 
+type View =
+  | "welcome"
+  | "projects"
+  | "editor"
+  | "claude-file-editor"
   | "settings"
   | "cc-agents"
   | "create-agent"
@@ -40,7 +41,8 @@ type View =
   | "mcp"
   | "usage-dashboard"
   | "project-settings"
-  | "tabs"; // New view for tab-based interface
+  | "tabs" // New view for tab-based interface
+  | "code-editor"; // Monaco code editor view
 
 /**
  * AppContent component - Contains the main app logic, wrapped by providers
@@ -339,7 +341,14 @@ function AppContent() {
             </div>
           </div>
         );
-      
+
+      case "code-editor":
+        return (
+          <CodeEditorView
+            initialDirectory={selectedProject?.path}
+          />
+        );
+
       case "usage-dashboard":
         return (
           <UsageDashboard onBack={() => handleViewChange("welcome")} />
