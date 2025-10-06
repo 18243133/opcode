@@ -1,6 +1,9 @@
-import React, { useRef, useEffect } from 'react';
-import Editor, { OnMount, Monaco } from '@monaco-editor/react';
+import React, { useRef, useEffect, useState } from 'react';
+import Editor, { OnMount, Monaco, loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
+
+// Configure Monaco loader
+loader.config({ monaco });
 
 export interface MonacoEditorProps {
   /**
@@ -59,11 +62,17 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     console.log('[Monaco] Editor mounted successfully');
+    console.log('[Monaco] Initial value length:', value?.length);
+    console.log('[Monaco] Language:', language);
+    console.log('[Monaco] Path:', path);
+
     editorRef.current = editor;
     monacoRef.current = monaco;
+    setIsEditorReady(true);
 
     // Configure Monaco
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -107,6 +116,11 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
 
   return (
     <div className={className} style={{ height }}>
+      {!isEditorReady && (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-muted-foreground">Initializing Monaco Editor...</div>
+        </div>
+      )}
       <Editor
         height={height}
         language={language}
@@ -117,6 +131,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
         onMount={handleEditorDidMount}
         beforeMount={(_monaco) => {
           console.log('[Monaco] Before mount, configuring...');
+          console.log('[Monaco] Value to load:', value?.substring(0, 100));
+        }}
+        onValidate={(markers) => {
+          console.log('[Monaco] Validation markers:', markers.length);
         }}
         options={{
           readOnly,
