@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useImperativeHandle, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Copy,
@@ -63,21 +63,41 @@ interface ClaudeCodeSessionProps {
    * Callback when project path changes
    */
   onProjectPathChange?: (path: string) => void;
+  /**
+   * Sidebar mode: compact layout for sidebar display
+   */
+  sidebarMode?: boolean;
+  /**
+   * Extra actions to display in the header (sidebar mode only)
+   */
+  extraHeaderActions?: React.ReactNode;
+}
+
+/**
+ * Ref handle for ClaudeCodeSession
+ */
+export interface ClaudeCodeSessionRef {
+  /**
+   * Send a prompt to Claude
+   */
+  sendPrompt: (prompt: string, model?: string) => void;
 }
 
 /**
  * ClaudeCodeSession component for interactive Claude Code sessions
- * 
+ *
  * @example
  * <ClaudeCodeSession onBack={() => setView('projects')} />
  */
-export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
+export const ClaudeCodeSession = forwardRef<ClaudeCodeSessionRef, ClaudeCodeSessionProps>(({
   session,
   initialProjectPath = "",
   className,
   onStreamingChange,
   onProjectPathChange,
-}) => {
+  sidebarMode = false,
+  extraHeaderActions,
+}, ref) => {
   const [projectPath] = useState(initialProjectPath || session?.project_path || "");
   const [messages, setMessages] = useState<ClaudeStreamMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +140,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   const isMountedRef = useRef(true);
   const isListeningRef = useRef(false);
   const sessionStartTime = useRef<number>(Date.now());
-  
+
   // Session metrics state for enhanced analytics
   const sessionMetrics = useRef({
     firstMessageTime: null as number | null,
@@ -926,6 +946,15 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
     }
   };
 
+  // Expose sendPrompt method via ref
+  useImperativeHandle(ref, () => ({
+    sendPrompt: (prompt: string, model?: string) => {
+      console.log('[ClaudeCodeSession] sendPrompt called via ref:', prompt.substring(0, 50) + '...');
+      // Trigger handleSendPrompt directly
+      handleSendPrompt(prompt, model || 'claude-sonnet-4-5-20250929');
+    }
+  }), [handleSendPrompt]);
+
   const handleCopyAsJsonl = async () => {
     const jsonl = rawJsonlOutput.join('\n');
     await navigator.clipboard.writeText(jsonl);
@@ -1247,14 +1276,20 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   const messagesList = (
     <div
       ref={parentRef}
-      className="flex-1 overflow-y-auto relative pb-40"
+      className={cn(
+        "flex-1 overflow-y-auto relative",
+        sidebarMode ? "pb-4" : "pb-40"
+      )}
       onScroll={handleScroll}
       style={{
         contain: 'strict',
       }}
     >
       <div
-        className="relative w-full max-w-6xl mx-auto px-4 pt-8 pb-4"
+        className={cn(
+          "relative w-full px-4 pt-8 pb-4",
+          !sidebarMode && "max-w-6xl mx-auto"
+        )}
         style={{
           height: `${Math.max(rowVirtualizer.getTotalSize(), 100)}px`,
           minHeight: '100px',
@@ -1368,12 +1403,25 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
   return (
     <TooltipProvider>
       <div className={cn("flex flex-col h-full bg-background", className)}>
-        <div className="w-full h-full flex flex-col">
+        {/* Sidebar Header */}
+        {sidebarMode && (
+          <div className="h-10 bg-[#2d2d2d] border-b border-[#2d2d30] flex items-center justify-between px-3 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-[#007acc]" />
+              <span className="text-sm text-[#cccccc] font-medium">Claude</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {extraHeaderActions}
+            </div>
+          </div>
+        )}
+
+        <div className="w-full h-full flex flex-col flex-1 min-h-0">
 
         {/* Main Content Area */}
         <div className={cn(
           "flex-1 overflow-hidden transition-all duration-300",
-          showTimeline && "sm:mr-96"
+          !sidebarMode && showTimeline && "sm:mr-96"
         )}>
           {showPreview ? (
             // Split pane layout when preview is active
@@ -1401,10 +1449,13 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
             />
           ) : (
             // Original layout when no preview
-            <div className="h-full flex flex-col max-w-6xl mx-auto px-6">
+            <div className={cn(
+              "h-full flex flex-col",
+              sidebarMode ? "px-2" : "max-w-6xl mx-auto px-6"
+            )}>
               {projectPathInput}
               {messagesList}
-              
+
               {isLoading && messages.length === 0 && (
                 <div className="flex items-center justify-center h-full">
                   <div className="flex items-center gap-3">
@@ -1428,7 +1479,11 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-3xl px-4"
+                className={cn(
+                  sidebarMode
+                    ? "relative mb-2 mx-4"
+                    : "fixed bottom-24 left-1/2 -translate-x-1/2 z-30 w-full max-w-3xl px-4"
+                )}
               >
                 <div className="bg-background/95 backdrop-blur-md border rounded-lg shadow-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
@@ -1485,7 +1540,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
           </AnimatePresence>
 
           {/* Navigation Arrows - positioned above prompt bar with spacing */}
-          {displayableMessages.length > 5 && (
+          {!sidebarMode && displayableMessages.length > 5 && (
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1564,8 +1619,8 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
           )}
 
           <div className={cn(
-            "fixed bottom-0 left-0 right-0 transition-all duration-300 z-50",
-            showTimeline && "sm:right-96"
+            sidebarMode ? "relative" : "fixed bottom-0 left-0 right-0 transition-all duration-300 z-50",
+            !sidebarMode && showTimeline && "sm:right-96"
           )}>
             <FloatingPromptInput
               ref={floatingPromptRef}
@@ -1574,6 +1629,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
               isLoading={isLoading}
               disabled={!projectPath}
               projectPath={projectPath}
+              containerMode={sidebarMode ? 'relative' : 'fixed'}
               extraMenuItems={
                 <>
                   {effectiveSession && (
@@ -1658,7 +1714,7 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
           </div>
 
           {/* Token Counter - positioned under the Send button */}
-          {totalTokens > 0 && (
+          {!sidebarMode && totalTokens > 0 && (
             <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
               <div className="max-w-6xl mx-auto">
                 <div className="flex justify-end px-4 pb-2">
@@ -1681,31 +1737,15 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
         </ErrorBoundary>
 
         {/* Timeline */}
-        <AnimatePresence>
-          {showTimeline && effectiveSession && (
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background border-l border-border shadow-xl z-30 overflow-hidden"
-            >
-              <div className="h-full flex flex-col">
-                {/* Timeline Header */}
-                <div className="flex items-center justify-between p-4 border-b border-border">
-                  <h3 className="text-lg font-semibold">Session Timeline</h3>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowTimeline(false)}
-                    className="h-8 w-8"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                {/* Timeline Content */}
-                <div className="flex-1 overflow-y-auto p-4">
+        {sidebarMode ? (
+          // In sidebar mode, use Dialog for Timeline
+          <Dialog open={showTimeline} onOpenChange={setShowTimeline}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+              <DialogHeader>
+                <DialogTitle>Session Timeline</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto">
+                {effectiveSession && (
                   <TimelineNavigator
                     sessionId={effectiveSession.id}
                     projectId={effectiveSession.project_id}
@@ -1716,11 +1756,53 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
                     onCheckpointCreated={handleCheckpointCreated}
                     refreshVersion={timelineVersion}
                   />
-                </div>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          // In normal mode, use slide-in panel
+          <AnimatePresence>
+            {showTimeline && effectiveSession && (
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="fixed right-0 top-0 h-full w-full sm:w-96 bg-background border-l border-border shadow-xl z-30 overflow-hidden"
+              >
+                <div className="h-full flex flex-col">
+                  {/* Timeline Header */}
+                  <div className="flex items-center justify-between p-4 border-b border-border">
+                    <h3 className="text-lg font-semibold">Session Timeline</h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowTimeline(false)}
+                      className="h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Timeline Content */}
+                  <div className="flex-1 overflow-y-auto p-4">
+                    <TimelineNavigator
+                      sessionId={effectiveSession.id}
+                      projectId={effectiveSession.project_id}
+                      projectPath={projectPath}
+                      currentMessageIndex={messages.length - 1}
+                      onCheckpointSelect={handleCheckpointSelect}
+                      onFork={handleFork}
+                      onCheckpointCreated={handleCheckpointCreated}
+                      refreshVersion={timelineVersion}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
 
       {/* Fork Dialog */}
@@ -1801,4 +1883,6 @@ export const ClaudeCodeSession: React.FC<ClaudeCodeSessionProps> = ({
       </div>
     </TooltipProvider>
   );
-};
+});
+
+ClaudeCodeSession.displayName = 'ClaudeCodeSession';

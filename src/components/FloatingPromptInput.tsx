@@ -58,6 +58,10 @@ interface FloatingPromptInputProps {
    * Extra menu items to display in the prompt bar
    */
   extraMenuItems?: React.ReactNode;
+  /**
+   * Container mode: fixed (global) or relative (within container)
+   */
+  containerMode?: 'fixed' | 'relative';
 }
 
 export interface FloatingPromptInputRef {
@@ -217,6 +221,7 @@ const FloatingPromptInputInner = (
     className,
     onCancel,
     extraMenuItems,
+    containerMode = 'fixed',
   }: FloatingPromptInputProps,
   ref: React.Ref<FloatingPromptInputRef>,
 ) => {
@@ -998,10 +1003,13 @@ const FloatingPromptInputInner = (
         )}
       </AnimatePresence>
 
-      {/* Fixed Position Input Bar */}
+      {/* Input Bar - Fixed or Relative */}
       <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border shadow-lg",
+          containerMode === 'fixed'
+            ? "fixed bottom-0 left-0 right-0 z-40"
+            : "relative",
+          "bg-background/95 backdrop-blur-sm border-t border-border shadow-lg",
           dragActive && "ring-2 ring-primary ring-offset-2",
           className
         )}

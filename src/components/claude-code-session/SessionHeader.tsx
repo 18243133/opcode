@@ -32,6 +32,8 @@ interface SessionHeaderProps {
   onProjectSettings?: () => void;
   onSlashCommandsSettings?: () => void;
   setCopyPopoverOpen: (open: boolean) => void;
+  sidebarMode?: boolean;
+  extraActions?: React.ReactNode;
 }
 
 export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
@@ -49,7 +51,9 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
   onToggleTimeline,
   onProjectSettings,
   onSlashCommandsSettings,
-  setCopyPopoverOpen
+  setCopyPopoverOpen,
+  sidebarMode = false,
+  extraActions
 }) => {
   return (
     <motion.div 
@@ -59,22 +63,26 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="h-8 w-8"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          
+          {!sidebarMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onBack}
+              className="h-8 w-8"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+
           <div className="flex items-center gap-2">
-            <Terminal className="h-5 w-5 text-primary" />
-            <span className="font-semibold">Claude Code Session</span>
+            <Terminal className={cn("text-primary", sidebarMode ? "h-4 w-4" : "h-5 w-5")} />
+            <span className={cn("font-semibold", sidebarMode ? "text-sm" : "")}>
+              {sidebarMode ? "Claude" : "Claude Code Session"}
+            </span>
           </div>
 
-          
-          {!projectPath && (
+
+          {!sidebarMode && !projectPath && (
             <Button
               variant="outline"
               size="sm"
@@ -88,7 +96,10 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
         </div>
 
         <div className="flex items-center gap-2">
-          {claudeSessionId && (
+          {/* Extra actions for sidebar mode */}
+          {sidebarMode && extraActions}
+
+          {!sidebarMode && claudeSessionId && (
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 <Hash className="h-3 w-3 mr-1" />
@@ -102,7 +113,7 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
             </div>
           )}
 
-          {hasMessages && !isStreaming && (
+          {!sidebarMode && hasMessages && !isStreaming && (
             <Popover
               open={copyPopoverOpen}
               onOpenChange={setCopyPopoverOpen}
@@ -135,39 +146,43 @@ export const SessionHeader: React.FC<SessionHeaderProps> = React.memo(({
             />
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleTimeline}
-            className={cn(
-              "h-8 w-8 transition-colors",
-              showTimeline && "bg-accent text-accent-foreground"
-            )}
-          >
-            <GitBranch className="h-4 w-4" />
-          </Button>
+          {!sidebarMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleTimeline}
+              className={cn(
+                "h-8 w-8 transition-colors",
+                showTimeline && "bg-accent text-accent-foreground"
+              )}
+            >
+              <GitBranch className="h-4 w-4" />
+            </Button>
+          )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Settings className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {onProjectSettings && projectPath && (
-                <DropdownMenuItem onClick={onProjectSettings}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Project Settings
-                </DropdownMenuItem>
-              )}
-              {onSlashCommandsSettings && projectPath && (
-                <DropdownMenuItem onClick={onSlashCommandsSettings}>
-                  <Command className="h-4 w-4 mr-2" />
-                  Slash Commands
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!sidebarMode && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {onProjectSettings && projectPath && (
+                  <DropdownMenuItem onClick={onProjectSettings}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Project Settings
+                  </DropdownMenuItem>
+                )}
+                {onSlashCommandsSettings && projectPath && (
+                  <DropdownMenuItem onClick={onSlashCommandsSettings}>
+                    <Command className="h-4 w-4 mr-2" />
+                    Slash Commands
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </motion.div>

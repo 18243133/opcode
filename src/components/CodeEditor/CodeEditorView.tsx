@@ -20,7 +20,7 @@ export interface CodeEditorViewProps {
   /**
    * Callback when a file is opened
    */
-  onFileOpen?: (filePath: string) => void;
+  onFileOpen?: (filePath: string, content?: string) => void;
   /**
    * Custom className
    */
@@ -113,8 +113,8 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
       openFile(filePath, content, language);
       console.log('[CodeEditorView] File opened successfully');
 
-      // Notify parent
-      onFileOpen?.(filePath);
+      // Notify parent with file content
+      onFileOpen?.(filePath, content);
     } catch (error) {
       console.error('[CodeEditorView] Failed to open file:', error);
     }
