@@ -3,9 +3,11 @@ import { Search, FolderOpen } from 'lucide-react';
 import { MonacoEditor, getLanguageFromPath } from './MonacoEditor';
 import { EditorTabs } from './EditorTabs';
 import { FileTree } from './FileTree';
+import { WelcomePage } from './WelcomePage';
 import type { FileNode } from './FileTree';
 import { useEditorTabs } from '@/hooks/editor/useEditorTabs';
 import { useFileOperations } from '@/hooks/editor/useFileOperations';
+import { useRecentWorkspaces } from '@/hooks/editor/useRecentWorkspaces';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -45,6 +47,7 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
   const [isLoadingTree, setIsLoadingTree] = useState(false);
 
   const fileOps = useFileOperations();
+  const { recentWorkspaces, addRecentWorkspace, removeRecentWorkspace } = useRecentWorkspaces();
   
   const {
     tabs,
@@ -68,18 +71,20 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
    */
   const loadDirectoryTree = useCallback(async (dirPath: string) => {
     if (!dirPath) return;
-    
+
     setIsLoadingTree(true);
     try {
       const tree = await fileOps.listDirectoryTree(dirPath, 5);
       setFileTree(tree);
       setCurrentDirectory(dirPath);
+      // Add to recent workspaces
+      addRecentWorkspace(dirPath);
     } catch (error) {
       console.error('Failed to load directory tree:', error);
     } finally {
       setIsLoadingTree(false);
     }
-  }, [fileOps]);
+  }, [fileOps, addRecentWorkspace]);
 
   /**
    * Handle file click in tree
@@ -163,6 +168,16 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
 
   return (
     <div className={cn("flex h-full bg-[#1e1e1e]", className)}>
+      {/* Show welcome page if no directory is open */}
+      {!currentDirectory && tabs.length === 0 ? (
+        <WelcomePage
+          onOpenFolder={handleSelectDirectory}
+          onOpenRecent={(path) => loadDirectoryTree(path)}
+          recentWorkspaces={recentWorkspaces}
+          onRemoveRecent={removeRecentWorkspace}
+        />
+      ) : (
+        <>
       {/* Left sidebar - File tree */}
       <div className="w-64 bg-[#252526] border-r border-[#2d2d30] flex flex-col">
         {/* Toolbar */}
@@ -263,6 +278,8 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

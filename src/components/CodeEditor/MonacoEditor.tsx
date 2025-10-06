@@ -61,6 +61,7 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
   const monacoRef = useRef<Monaco | null>(null);
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
+    console.log('[Monaco] Editor mounted successfully');
     editorRef.current = editor;
     monacoRef.current = monaco;
 
@@ -100,6 +101,10 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
     }
   }, [readOnly]);
 
+  useEffect(() => {
+    console.log('[Monaco] Props updated:', { language, valueLength: value?.length, path });
+  }, [language, value, path]);
+
   return (
     <div className={className} style={{ height }}>
       <Editor
@@ -110,6 +115,9 @@ export const MonacoEditor: React.FC<MonacoEditorProps> = ({
         path={path}
         onChange={onChange}
         onMount={handleEditorDidMount}
+        beforeMount={(_monaco) => {
+          console.log('[Monaco] Before mount, configuring...');
+        }}
         options={{
           readOnly,
           minimap: {
