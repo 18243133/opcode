@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opcode - VS Code风格代码编辑器集成设计</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #1e1e1e;
+            color: #cccccc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 标题栏 */
+        .titlebar {
+            height: 35px;
+            background: #323233;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 1px solid #2d2d30;
+            -webkit-app-region: drag;
+        }
+
+        .titlebar-title {
+            font-size: 12px;
+            color: #cccccc;
+            margin-left: 10px;
+        }
+
+        /* 主容器 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 35px);
+        }
+
+        /* 左侧边栏 */
+        .sidebar {
+            width: 250px;
+            background: #252526;
+            border-right: 1px solid #2d2d30;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 10px 15px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: 600;
+            border-bottom: 1px solid #2d2d30;
+        }
+
+        /* 文件树 */
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 5px 0;
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px 4px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            user-select: none;
+        }
+
+        .tree-item:hover {
+            background: #2a2d2e;
+        }
+
+        .tree-item.selected {
+            background: #094771;
+        }
+
+        .tree-item.folder {
+            font-weight: 500;
+        }
+
+        .tree-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            opacity: 0.8;
+        }
+
+        .tree-chevron {
+            width: 12px;
+            height: 12px;
+            margin-right: 4px;
+            transition: transform 0.2s;
+        }
+
+        .tree-chevron.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-children {
+            padding-left: 16px;
+        }
+
+        /* 编辑器区域 */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+        }
+
+        /* 标签栏 */
+        .tabs-bar {
+            display: flex;
+            background: #2d2d2d;
+            border-bottom: 1px solid #2d2d30;
+            overflow-x: auto;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            font-size: 13px;
+            border-right: 1px solid #2d2d30;
+            cursor: pointer;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        .tab:hover {
+            background: #2a2d2e;
+        }
+
+        .tab.active {
+            background: #1e1e1e;
+            border-bottom: 2px solid #007acc;
+        }
+
+        .tab-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+        }
+
+        .tab-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            margin-left: 6px;
+            opacity: 0.6;
+            cursor: pointer;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+        /* 编辑器内容 */
+        .editor-content {
+            flex: 1;
+            display: flex;
+        }
+
+        /* Monaco编辑器占位 */
+        .monaco-editor-placeholder {
+            flex: 1;
+            background: #1e1e1e;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow: auto;
+        }
+
+        .line-numbers {
+            width: 50px;
+            background: #1e1e1e;
+            color: #858585;
+            text-align: right;
+            padding-right: 10px;
+            user-select: none;
+        }
+
+        .code-content {
+            flex: 1;
+            padding-left: 10px;
+        }
+
+        /* 右侧面板（Claude聊天） */
+        .right-panel {
+            width: 400px;
+            background: #252526;
+            border-left: 1px solid #2d2d30;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid #2d2d30;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #2d2d2d;
+        }
+
+        .message.user {
+            background: #094771;
+        }
+
+        .message-header {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .message-content {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #2d2d30;
+        }
+
+        .chat-input textarea {
+            width: 100%;
+            background: #3c3c3c;
+            border: 1px solid #2d2d30;
+            color: #cccccc;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .chat-input textarea:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        /* 状态栏 */
+        .statusbar {
+            height: 22px;
+            background: #007acc;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 12px;
+            justify-content: space-between;
+        }
+
+        .statusbar-left, .statusbar-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* 分割器 */
+        .resizer {
+            width: 4px;
+            background: #2d2d30;
+            cursor: col-resize;
+        }
+
+        .resizer:hover {
+            background: #007acc;
+        }
+
+        /* 图标 */
+        .icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 注释标签 */
+        .annotation {
+            position: absolute;
+            background: #007acc;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .annotation::after {
+            content: '';
+            position: absolute;
+            border: 6px solid transparent;
+        }
+
+        .annotation.top::after {
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top-color: #007acc;
+        }
+
+        .annotation.left::after {
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left-color: #007acc;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题栏 -->
+    <div class="titlebar">
+        <div class="titlebar-title">Opcode - VS Code风格代码编辑器</div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container">
+        <!-- 左侧文件树 -->
+        <div class="sidebar">
+            <div class="sidebar-header">文件浏览器</div>
+            <div class="file-tree">
+                <!-- 文件夹 -->
+                <div class="tree-item folder selected">
+                    <span class="tree-chevron expanded">▶</span>
+                    <span class="tree-icon">📁</span>
+                    <span>src</span>
+                </div>
+                <div class="tree-children">
+                    <div class="tree-item folder">
+                        <span class="tree-chevron">▶</span>
+                        <span class="tree-icon">📁</span>
+                        <span>components</span>
+                    </div>
+                    <div class="tree-item">
+                        <span class="tree-icon">📄</span>
+                        <span>App.tsx</span>
+                    </div>
+                    <div class="tree-item">
+                        <span class="tree-icon">📄</span>
+                        <span>main.tsx</span>
+                    </div>
+                </div>
+                
+                <div class="tree-item folder">
+                    <span class="tree-chevron">▶</span>
+                    <span class="tree-icon">📁</span>
+                    <span>lib</span>
+                </div>
+                
+                <div class="tree-item">
+                    <span class="tree-icon">📄</span>
+                    <span>package.json</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑器区域 -->
+        <div class="editor-area">
+            <!-- 标签栏 -->
+            <div class="tabs-bar">
+                <div class="tab active">
+                    <span class="tab-icon">📄</span>
+                    <span class="tab-label">App.tsx</span>
+                    <span class="tab-close">×</span>
+                </div>
+                <div class="tab">
+                    <span class="tab-icon">📄</span>
+                    <span class="tab-label">main.tsx</span>
+                    <span class="tab-close">×</span>
+                </div>
+            </div>
+
+            <!-- 编辑器内容 -->
+            <div class="editor-content">
+                <div class="monaco-editor-placeholder">
+                    <div style="display: flex;">
+                        <div class="line-numbers">
+                            <div>1</div>
+                            <div>2</div>
+                            <div>3</div>
+                            <div>4</div>
+                            <div>5</div>
+                            <div>6</div>
+                            <div>7</div>
+                            <div>8</div>
+                        </div>
+                        <div class="code-content">
+                            <div><span style="color: #c586c0">import</span> { useState } <span style="color: #c586c0">from</span> <span style="color: #ce9178">"react"</span>;</div>
+                            <div></div>
+                            <div><span style="color: #c586c0">function</span> <span style="color: #dcdcaa">App</span>() {</div>
+                            <div>  <span style="color: #c586c0">const</span> [count, setCount] = <span style="color: #dcdcaa">useState</span>(<span style="color: #b5cea8">0</span>);</div>
+                            <div></div>
+                            <div>  <span style="color: #c586c0">return</span> (</div>
+                            <div>    <span style="color: #808080">&lt;div&gt;Count: {count}&lt;/div&gt;</span></div>
+                            <div>  );</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分割器 -->
+        <div class="resizer"></div>
+
+        <!-- 右侧Claude聊天面板 -->
+        <div class="right-panel">
+            <div class="panel-header">
+                <span>💬 Claude Code</span>
+                <span style="font-size: 11px; color: #888;">claude-sonnet-4-5</span>
+            </div>
+            
+            <div class="chat-messages">
+                <div class="message">
+                    <div class="message-header">Claude</div>
+                    <div class="message-content">
+                        我可以帮你编写、修改和审查代码。你可以：<br>
+                        • 让我创建新文件<br>
+                        • 修改现有代码<br>
+                        • 解释代码逻辑<br>
+                        • 运行命令
+                    </div>
+                </div>
+                
+                <div class="message user">
+                    <div class="message-header">You</div>
+                    <div class="message-content">
+                        帮我在App.tsx中添加一个按钮来增加计数
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <textarea placeholder="输入消息... (Shift+Enter换行)"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="statusbar">
+        <div class="statusbar-left">
+            <span>📁 /Users/project/opcode</span>
+            <span>🔧 TypeScript</span>
+        </div>
+        <div class="statusbar-right">
+            <span>Ln 4, Col 23</span>
+            <span>UTF-8</span>
+            <span>LF</span>
+        </div>
+    </div>
+
+    <!-- 注释标签 -->
+    <div class="annotation top" style="top: 60px; left: 120px;">
+        文件树<br>可展开/折叠
+    </div>
+    
+    <div class="annotation left" style="top: 200px; left: 520px;">
+        Monaco Editor<br>VS Code核心编辑器
+    </div>
+    
+    <div class="annotation top" style="top: 60px; right: 250px;">
+        多标签编辑<br>同时打开多个文件
+    </div>
+    
+    <div class="annotation left" style="top: 200px; right: 420px;">
+        Claude聊天<br>实时代码协助
+    </div>
+</body>
+</html>
+
