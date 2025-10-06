@@ -107,13 +107,13 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
         </div>
 
         {/* Recent Workspaces */}
-        {recentWorkspaces.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-[#888]" />
-              <h2 className="text-xl font-light">最近打开</h2>
-            </div>
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-5 h-5 text-[#888]" />
+            <h2 className="text-xl font-light">最近打开</h2>
+          </div>
 
+          {recentWorkspaces.length > 0 ? (
             <div className="space-y-2">
               {recentWorkspaces.map((workspace) => (
                 <div
@@ -160,20 +160,26 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="p-8 text-center text-[#888] bg-[#252526] rounded-md border border-[#2d2d30]">
+              <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">还没有打开过任何项目</p>
+              <p className="text-xs mt-2">点击上方"打开项目"按钮开始</p>
+            </div>
+          )}
 
-            {recentWorkspaces.length > 5 && (
-              <div className="mt-4 text-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#007acc] hover:text-[#007acc] hover:bg-[#2d2d30]"
-                >
-                  更多...
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+          {recentWorkspaces.length > 5 && (
+            <div className="mt-4 text-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-[#007acc] hover:text-[#007acc] hover:bg-[#2d2d30]"
+              >
+                更多...
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Quick Actions */}
         <div className="mt-12 pt-8 border-t border-[#2d2d30]">
