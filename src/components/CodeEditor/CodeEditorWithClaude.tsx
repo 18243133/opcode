@@ -22,6 +22,14 @@ export interface CodeEditorWithClaudeProps {
    * Custom className
    */
   className?: string;
+  /**
+   * Callback when project directory changes
+   */
+  onProjectChange?: (projectPath: string) => void;
+  /**
+   * Callback when a file is opened
+   */
+  onFileOpen?: (filePath: string, content: string) => void;
 }
 
 /**
@@ -43,6 +51,8 @@ const MAX_CLAUDE_PANEL_WIDTH = 800;
 export const CodeEditorWithClaude: React.FC<CodeEditorWithClaudeProps> = ({
   initialDirectory,
   className,
+  onProjectChange,
+  onFileOpen,
 }) => {
   // Load saved preferences from localStorage
   const [showClaude, setShowClaude] = useState(() => {
@@ -78,7 +88,11 @@ export const CodeEditorWithClaude: React.FC<CodeEditorWithClaudeProps> = ({
     if (content !== undefined) {
       setCurrentFileContent(content);
     }
-  }, []);
+    // Notify parent component
+    if (onFileOpen && content !== undefined) {
+      onFileOpen(filePath, content);
+    }
+  }, [onFileOpen]);
 
   /**
    * Get language from file path
@@ -209,6 +223,7 @@ Please review this code and let me know if you have any suggestions.`;
         <CodeEditorView
           initialDirectory={initialDirectory}
           onFileOpen={handleFileOpen}
+          onProjectChange={onProjectChange}
         />
       </div>
 

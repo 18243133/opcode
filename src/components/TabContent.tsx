@@ -19,6 +19,7 @@ const UsageDashboard = lazy(() => import('@/components/UsageDashboard').then(m =
 const MCPManager = lazy(() => import('@/components/MCPManager').then(m => ({ default: m.MCPManager })));
 const Settings = lazy(() => import('@/components/Settings').then(m => ({ default: m.Settings })));
 const MarkdownEditor = lazy(() => import('@/components/MarkdownEditor').then(m => ({ default: m.MarkdownEditor })));
+const CodeEditorWithClaude = lazy(() => import('@/components/CodeEditor').then(m => ({ default: m.CodeEditorWithClaude })));
 // const ClaudeFileEditor = lazy(() => import('@/components/ClaudeFileEditor').then(m => ({ default: m.ClaudeFileEditor })));
 
 // Import non-lazy components for projects view
@@ -363,7 +364,32 @@ const TabPanel: React.FC<TabPanelProps> = ({ tab, isActive }) => {
             <div className="p-4">Import agent functionality coming soon...</div>
           </div>
         );
-      
+
+      case 'code-editor':
+        return (
+          <div className="h-full">
+            <CodeEditorWithClaude
+              initialDirectory={tab.projectDirectory}
+              sessionId={tab.id}
+              projectId={tab.id}
+              onFileOpen={(filePath: string, _content: string) => {
+                // Update tab's current file path
+                updateTab(tab.id, {
+                  currentFilePath: filePath
+                });
+              }}
+              onProjectChange={(projectPath: string) => {
+                // Update tab title and project directory
+                const projectName = projectPath.split(/[/\\]/).pop() || 'Code Editor';
+                updateTab(tab.id, {
+                  title: projectName,
+                  projectDirectory: projectPath
+                });
+              }}
+            />
+          </div>
+        );
+
       default:
         return (
           <div className="h-full">

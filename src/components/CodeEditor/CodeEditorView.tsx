@@ -22,6 +22,10 @@ export interface CodeEditorViewProps {
    */
   onFileOpen?: (filePath: string, content?: string) => void;
   /**
+   * Callback when project directory changes
+   */
+  onProjectChange?: (projectPath: string) => void;
+  /**
    * Custom className
    */
   className?: string;
@@ -29,7 +33,7 @@ export interface CodeEditorViewProps {
 
 /**
  * CodeEditorView - Main code editor interface
- * 
+ *
  * @example
  * <CodeEditorView
  *   initialDirectory="/path/to/project"
@@ -39,6 +43,7 @@ export interface CodeEditorViewProps {
 export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
   initialDirectory,
   onFileOpen,
+  onProjectChange,
   className,
 }) => {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
@@ -79,12 +84,14 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
       setCurrentDirectory(dirPath);
       // Add to recent workspaces
       addRecentWorkspace(dirPath);
+      // Notify parent component
+      onProjectChange?.(dirPath);
     } catch (error) {
       console.error('Failed to load directory tree:', error);
     } finally {
       setIsLoadingTree(false);
     }
-  }, [fileOps, addRecentWorkspace]);
+  }, [fileOps, addRecentWorkspace, onProjectChange]);
 
   /**
    * Handle file click in tree

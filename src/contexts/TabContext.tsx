@@ -4,7 +4,7 @@ import { SessionPersistenceService } from '@/services/sessionPersistence';
 
 export interface Tab {
   id: string;
-  type: 'chat' | 'agent' | 'agents' | 'projects' | 'usage' | 'mcp' | 'settings' | 'claude-md' | 'claude-file' | 'agent-execution' | 'create-agent' | 'import-agent';
+  type: 'chat' | 'agent' | 'agents' | 'projects' | 'usage' | 'mcp' | 'settings' | 'claude-md' | 'claude-file' | 'agent-execution' | 'create-agent' | 'import-agent' | 'code-editor';
   title: string;
   sessionId?: string;  // for chat tabs
   sessionData?: any; // for chat tabs - stores full session object
@@ -13,6 +13,8 @@ export interface Tab {
   claudeFileId?: string; // for claude-file tabs
   initialProjectPath?: string; // for chat tabs
   projectPath?: string; // for agent-execution tabs
+  projectDirectory?: string; // for code-editor tabs - the opened project directory
+  currentFilePath?: string; // for code-editor tabs - the currently opened file
   status: 'active' | 'idle' | 'running' | 'complete' | 'error';
   hasUnsavedChanges: boolean;
   order: number;

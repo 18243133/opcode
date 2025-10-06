@@ -25,7 +25,6 @@ import { TabContent } from "@/components/TabContent";
 import { useTabState } from "@/hooks/useTabState";
 import { useAppLifecycle, useTrackEvent } from "@/hooks";
 import { StartupIntro } from "@/components/StartupIntro";
-import { CodeEditorWithClaude } from "@/components/CodeEditor";
 
 type View =
   | "welcome"
@@ -41,15 +40,14 @@ type View =
   | "mcp"
   | "usage-dashboard"
   | "project-settings"
-  | "tabs" // New view for tab-based interface
-  | "code-editor"; // Monaco code editor view
+  | "tabs"; // Tab-based interface
 
 /**
  * AppContent component - Contains the main app logic, wrapped by providers
  */
 function AppContent() {
-  const [view, setView] = useState<View>("code-editor");
-  const { createClaudeMdTab, createSettingsTab, createUsageTab, createMCPTab, createAgentsTab } = useTabState();
+  const [view, setView] = useState<View>("tabs");
+  const { createClaudeMdTab, createSettingsTab, createUsageTab, createMCPTab, createAgentsTab, createCodeEditorTab } = useTabState();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -342,15 +340,6 @@ function AppContent() {
           </div>
         );
 
-      case "code-editor":
-        return (
-          <CodeEditorWithClaude
-            initialDirectory={selectedProject?.path}
-            sessionId={selectedProject?.id}
-            projectId={selectedProject?.id}
-          />
-        );
-
       case "usage-dashboard":
         return (
           <UsageDashboard onBack={() => handleViewChange("welcome")} />
@@ -405,7 +394,10 @@ function AppContent() {
           setView("tabs");
         }}
         onInfoClick={() => setShowNFO(true)}
-        onCodeEditorClick={() => setView("code-editor")}
+        onCodeEditorClick={() => {
+          createCodeEditorTab();
+          setView("tabs");
+        }}
       />
       
       {/* Topbar - Commented out since navigation moved to titlebar */}
