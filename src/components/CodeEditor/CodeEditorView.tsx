@@ -4,6 +4,7 @@ import { MonacoEditor, getLanguageFromPath } from './MonacoEditor';
 import { EditorTabs } from './EditorTabs';
 import { FileTree } from './FileTree';
 import { WelcomePage } from './WelcomePage';
+import { SearchPanel } from './SearchPanel';
 import type { FileNode } from './FileTree';
 import { useEditorTabs } from '@/hooks/editor/useEditorTabs';
 import { useFileOperations } from '@/hooks/editor/useFileOperations';
@@ -60,6 +61,7 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
   const [currentDirectory, setCurrentDirectory] = useState<string>(initialDirectory || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoadingTree, setIsLoadingTree] = useState(false);
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
 
   const fileOps = useFileOperations();
   const { recentSessions, isLoading: isLoadingSessions } = useRecentClaudeSessions(10);
@@ -159,6 +161,22 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
       console.error('[CodeEditorView] Failed to open file:', error);
     }
   }, [fileOps, openFile, onFileOpen]);
+
+  /**
+   * Handle search result click
+   */
+  const handleSearchResultClick = useCallback(async (filePath: string, lineNumber: number) => {
+    try {
+      // Open the file
+      await handleFileClick(filePath);
+
+      // TODO: Jump to line number in Monaco editor
+      // This will be implemented when we add Monaco editor line navigation
+      console.log(`Navigate to ${filePath}:${lineNumber}`);
+    } catch (error) {
+      console.error('Failed to open search result:', error);
+    }
+  }, [handleFileClick]);
 
   /**
    * Save open files history when tabs change
@@ -264,6 +282,15 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
             <FolderOpen className="w-3 h-3 mr-1" />
             {currentDirectory ? currentDirectory.split(/[/\\]/).pop() : 'Open Folder'}
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSearchPanel(!showSearchPanel)}
+            className="h-7 w-7 p-0"
+            title="Search in Files (Ctrl+Shift+F)"
+          >
+            <Search className="w-3 h-3" />
+          </Button>
         </div>
 
         {/* Search */}
@@ -312,20 +339,33 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
         />
 
         {/* Editor */}
-        <div className="flex-1 relative">
-          {activeTab ? (
-            <MonacoEditor
-              value={activeTab.content}
-              language={activeTab.language}
-              path={activeTab.filePath}
-              onChange={(value) => updateTabContent(activeTab.id, value || '')}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-[#888]">
-              <div className="text-center">
-                <p className="text-lg mb-2">No file opened</p>
-                <p className="text-sm">Select a file from the file tree to start editing</p>
+        <div className="flex-1 relative flex">
+          <div className="flex-1">
+            {activeTab ? (
+              <MonacoEditor
+                value={activeTab.content}
+                language={activeTab.language}
+                path={activeTab.filePath}
+                onChange={(value) => updateTabContent(activeTab.id, value || '')}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-[#888]">
+                <div className="text-center">
+                  <p className="text-lg mb-2">No file opened</p>
+                  <p className="text-sm">Select a file from the file tree to start editing</p>
+                </div>
               </div>
+            )}
+          </div>
+
+          {/* Search Panel */}
+          {showSearchPanel && currentDirectory && (
+            <div className="w-96">
+              <SearchPanel
+                projectPath={currentDirectory}
+                onResultClick={handleSearchResultClick}
+                onClose={() => setShowSearchPanel(false)}
+              />
             </div>
           )}
         </div>

@@ -298,6 +298,10 @@ fn main() {
             commands::file_operations::is_directory,
             commands::file_operations::get_file_metadata,
             commands::file_operations::reveal_in_explorer,
+
+            // Search Operations
+            commands::search::search_in_files,
+            commands::search::replace_in_files,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
