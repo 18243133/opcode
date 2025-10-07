@@ -18,6 +18,10 @@
     <a href="#development"><img src="https://img.shields.io/badge/Develop-🛠️-orange?style=for-the-badge" alt="Development"></a>
     <a href="https://discord.com/invite/KYwhHVzUsY"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
   </p>
+
+  <p>
+    <strong>English</strong> | <a href="README.zh-CN.md">简体中文</a>
+  </p>
 </div>
 
 ![457013521-6133a738-d0cb-4d3e-8746-c6768c82672c](https://github.com/user-attachments/assets/a028de9e-d881-44d8-bae5-7326ab3558b9)
@@ -25,6 +29,20 @@
 
 
 https://github.com/user-attachments/assets/6bceea0f-60b6-4c3e-a745-b891de00b8d0
+
+### 🎬 Key Features in Action
+
+**💻 Modern Code Editor**
+- Multi-tab editing with syntax highlighting
+- File tree with context menu operations
+- Global search and replace across all files
+- Auto-save and file history restoration
+
+**🔍 Powerful Search**
+- Regular expression support
+- Case-sensitive and whole-word matching
+- File inclusion/exclusion patterns
+- Batch replace functionality
 
 
 
@@ -46,14 +64,21 @@ Think of opcode as your command center for Claude Code - bridging the gap betwee
 - [✨ Features](#-features)
   - [🗂️ Project & Session Management](#️-project--session-management)
   - [🤖 CC Agents](#-cc-agents)
-  
+  - [💻 Modern Code Editor](#-modern-code-editor-)
   - [📊 Usage Analytics Dashboard](#-usage-analytics-dashboard)
   - [🔌 MCP Server Management](#-mcp-server-management)
   - [⏰ Timeline & Checkpoints](#-timeline--checkpoints)
   - [📝 CLAUDE.md Management](#-claudemd-management)
-- [📖 Usage](#-usage)
+- [� Roadmap - Coming Soon](#-roadmap---coming-soon)
+  - [🎯 Phase 1: Smart Editing Features](#-phase-1-smart-editing-features-in-progress)
+  - [🧠 Phase 2: Intelligent Code Assistance](#-phase-2-intelligent-code-assistance-next)
+  - [🤖 Phase 3: Deep Claude Integration](#-phase-3-deep-claude-integration-planned)
+  - [🔄 Phase 4: Collaboration & Version Control](#-phase-4-collaboration--version-control-future)
+  - [⚡ Phase 5: Advanced Features](#-phase-5-advanced-features-future)
+- [�📖 Usage](#-usage)
   - [Getting Started](#getting-started)
   - [Managing Projects](#managing-projects)
+  - [Using the Code Editor](#using-the-code-editor)
   - [Creating Agents](#creating-agents)
   - [Tracking Usage](#tracking-usage)
   - [Working with MCP Servers](#working-with-mcp-servers)
@@ -72,12 +97,34 @@ Think of opcode as your command center for Claude Code - bridging the gap betwee
 - **Session History**: View and resume past coding sessions with full context
 - **Smart Search**: Find projects and sessions quickly with built-in search
 - **Session Insights**: See first messages, timestamps, and session metadata at a glance
+- **Auto-scroll**: Automatically scroll to the latest messages during conversations
+- **File History**: Automatically restore previously opened files when reopening projects
 
 ### 🤖 **CC Agents**
 - **Custom AI Agents**: Create specialized agents with custom system prompts and behaviors
 - **Agent Library**: Build a collection of purpose-built agents for different tasks
 - **Background Execution**: Run agents in separate processes for non-blocking operations
 - **Execution History**: Track all agent runs with detailed logs and performance metrics
+
+### 💻 **Modern Code Editor** ✨ NEW
+- **Monaco Editor Integration**: Full-featured code editor with syntax highlighting for 100+ languages
+- **Multi-tab Editing**: Work on multiple files simultaneously with tab management
+- **File Tree Browser**: Navigate your project structure with an intuitive file tree
+- **Context Menu Operations**: Right-click to create, rename, delete files and folders
+- **Global Search & Replace**:
+  - Search across all files in your project
+  - Support for regular expressions, case-sensitive, and whole-word matching
+  - File inclusion/exclusion patterns (e.g., `*.ts`, exclude `node_modules`)
+  - Batch replace functionality
+  - Highlight matches with line numbers
+- **Smart File Operations**:
+  - Create new files and folders
+  - Rename with validation
+  - Delete with confirmation
+  - Copy file paths (absolute and relative)
+  - Reveal in system file explorer
+- **Auto-save**: Automatically save changes as you type
+- **Unsaved Changes Indicator**: Visual feedback for modified files
 
 
 
@@ -106,7 +153,47 @@ Think of opcode as your command center for Claude Code - bridging the gap betwee
 - **Project Scanner**: Find all CLAUDE.md files in your projects
 - **Syntax Highlighting**: Full markdown support with syntax highlighting
 
-## 📖 Usage
+## � Roadmap - Coming Soon
+
+### 🎯 **Phase 1: Smart Editing Features** (In Progress)
+- [ ] **Code Formatting**: Prettier integration for automatic code formatting
+- [ ] **Code Snippets**: Built-in and custom code snippet system
+- [ ] **Multi-cursor Editing**: Alt+Click for multiple cursors, Ctrl+D to select next occurrence
+- [ ] **Code Folding**: Collapse/expand functions, classes, and regions
+- [ ] **Minimap**: Visual overview of your code structure
+
+### 🧠 **Phase 2: Intelligent Code Assistance** (Next)
+- [ ] **LSP Integration**: Language Server Protocol support for intelligent code completion
+- [ ] **AI-Powered Completion**: Claude-assisted code suggestions
+- [ ] **Real-time Diagnostics**: Syntax errors, type checking, and linting
+- [ ] **Quick Fixes**: One-click fixes for common issues
+- [ ] **Code Navigation**: Go to definition, find references, symbol search
+- [ ] **Smart Refactoring**: Rename symbols, extract functions, inline variables
+
+### 🤖 **Phase 3: Deep Claude Integration** (Planned)
+- [ ] **Inline AI Assistant**: Ask Claude about selected code directly in the editor
+- [ ] **Code Explanation**: Automatic code documentation and comments
+- [ ] **Code Generation**: Generate code from natural language descriptions
+- [ ] **Intelligent Code Review**: AI-powered code quality and security analysis
+- [ ] **Context-Aware Chat**: Reference files and symbols with @mentions
+- [ ] **Project-Level Understanding**: Automatic codebase indexing and dependency analysis
+
+### 🔄 **Phase 4: Collaboration & Version Control** (Future)
+- [ ] **Git Integration**: Visual diff, commit, push, pull, branch management
+- [ ] **AI Commit Messages**: Automatically generate meaningful commit messages
+- [ ] **Merge Conflict Resolution**: AI-assisted conflict resolution
+- [ ] **Real-time Collaboration**: Multi-user editing with cursor synchronization
+- [ ] **Code Review Tools**: Inline comments and suggestions
+
+### ⚡ **Phase 5: Advanced Features** (Future)
+- [ ] **Integrated Terminal**: Run commands without leaving the editor
+- [ ] **Extension System**: Plugin architecture for custom functionality
+- [ ] **Performance Optimization**: Virtual scrolling, lazy loading, web workers
+- [ ] **Debugging Support**: Breakpoints, step-through debugging
+- [ ] **Testing Integration**: Run and view test results inline
+- [ ] **Docker Integration**: Manage containers from the editor
+
+## �📖 Usage
 
 ### Getting Started
 
@@ -123,6 +210,34 @@ Projects → Select Project → View Sessions → Resume or Start New
 - Click on any project to view its sessions
 - Each session shows the first message and timestamp
 - Resume sessions directly or start new ones
+- Previously opened files are automatically restored
+
+### Using the Code Editor
+
+```
+Projects → Select Project → Code Editor → Edit Files
+```
+
+**File Operations:**
+- Right-click on files/folders for context menu
+- Create new files and folders
+- Rename, delete, copy paths
+- Reveal in system file explorer
+
+**Search & Replace:**
+1. Click the search icon in the file tree toolbar
+2. Enter search query
+3. Toggle options: Case-sensitive (Aa), Whole word (Ab), Regex (.*)
+4. Use advanced options to filter files
+5. Click results to jump to location
+6. Use "Replace All" for batch replacements
+
+**Keyboard Shortcuts:**
+- `Ctrl+S` - Save current file
+- `Ctrl+Shift+F` - Open search panel
+- `F2` - Rename file
+- `Del` - Delete file
+- `Esc` - Close search panel
 
 ### Creating Agents
 
