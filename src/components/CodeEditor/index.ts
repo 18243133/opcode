@@ -8,7 +8,7 @@ export { FileTree, buildFileTree, filterFileTree } from './FileTree';
 export type { FileNode, FileTreeProps } from './FileTree';
 
 export { WelcomePage } from './WelcomePage';
-export type { WelcomePageProps, RecentWorkspace } from './WelcomePage';
+export type { WelcomePageProps } from './WelcomePage';
 
 export { CodeEditorView } from './CodeEditorView';
 export type { CodeEditorViewProps } from './CodeEditorView';

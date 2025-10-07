@@ -33,6 +33,7 @@ import type { ClaudeStreamMessage } from "./AgentExecution";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useTrackEvent, useComponentMetrics, useWorkflowTracking } from "@/hooks";
 import { SessionPersistenceService } from "@/services/sessionPersistence";
+import { ClaudeSessionSelector } from "./ClaudeSessionSelector";
 
 interface ClaudeCodeSessionProps {
   /**
@@ -43,6 +44,10 @@ interface ClaudeCodeSessionProps {
    * Initial project path (for new sessions)
    */
   initialProjectPath?: string;
+  /**
+   * Initial project ID (for loading sessions)
+   */
+  initialProjectId?: string;
   /**
    * Callback to go back
    */
@@ -92,13 +97,15 @@ export interface ClaudeCodeSessionRef {
 export const ClaudeCodeSession = forwardRef<ClaudeCodeSessionRef, ClaudeCodeSessionProps>(({
   session,
   initialProjectPath = "",
+  initialProjectId,
   className,
   onStreamingChange,
   onProjectPathChange,
   sidebarMode = false,
   extraHeaderActions,
 }, ref) => {
-  const [projectPath] = useState(initialProjectPath || session?.project_path || "");
+  const [projectPath, setProjectPath] = useState(initialProjectPath || session?.project_path || "");
+  const [projectId, setProjectId] = useState(initialProjectId || "");
   const [messages, setMessages] = useState<ClaudeStreamMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -165,13 +172,119 @@ export const ClaudeCodeSession = forwardRef<ClaudeCodeSessionRef, ClaudeCodeSess
   // const aiTracking = useAIInteractionTracking('sonnet'); // Default model
   const workflowTracking = useWorkflowTracking('claude_session');
   
+  // Update projectPath and projectId when they change
+  useEffect(() => {
+    if (initialProjectPath) {
+      setProjectPath(initialProjectPath);
+      // Reset session state when project changes
+      setMessages([]);
+      setIsFirstPrompt(true);
+      setClaudeSessionId(null);
+      setExtractedSessionInfo(null);
+    }
+  }, [initialProjectPath]);
+
+  useEffect(() => {
+    if (initialProjectId) {
+      setProjectId(initialProjectId);
+    }
+  }, [initialProjectId]);
+
+  // Handle session selection from dropdown
+  const handleSessionSelect = async (sessionId: string) => {
+    try {
+      console.log('[ClaudeCodeSession] Loading session:', sessionId, 'for project:', projectId);
+      setIsLoading(true);
+      setError(null);
+
+      // Use the projectId state directly
+      if (!projectId) {
+        console.error('[ClaudeCodeSession] No project ID available');
+        setError("No project ID available");
+        setIsLoading(false);
+        return;
+      }
+
+      // Load session messages
+      const sessionMessages = await api.loadSessionHistory(sessionId, projectId);
+      console.log('[ClaudeCodeSession] Loaded messages:', sessionMessages.length, 'messages');
+      console.log('[ClaudeCodeSession] Raw first message:', sessionMessages[0]);
+
+      if (sessionMessages.length === 0) {
+        console.warn('[ClaudeCodeSession] No messages found in session');
+        setMessages([]);
+        setClaudeSessionId(sessionId);
+        setIsFirstPrompt(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Convert JSONL messages to ClaudeStreamMessage format
+      // JSONL messages are already in the correct format from Claude Desktop
+      // They should have: type, message, timestamp, etc.
+      const convertedMessages: ClaudeStreamMessage[] = sessionMessages.map((msg: any) => {
+        // If the message already has the correct structure, use it directly
+        if (msg.type && (msg.type === 'user' || msg.type === 'assistant' || msg.type === 'system' || msg.type === 'result')) {
+          return msg as ClaudeStreamMessage;
+        }
+
+        // Otherwise, try to convert from old format
+        console.warn('[ClaudeCodeSession] Converting message from old format:', msg);
+        const converted: ClaudeStreamMessage = {
+          type: msg.user_message ? 'user' : 'assistant',
+          message: msg.message || {
+            content: msg.user_message ? [{ type: 'text', text: msg.user_message }] :
+                     msg.assistant_message ? [{ type: 'text', text: msg.assistant_message }] : []
+          },
+          timestamp: msg.timestamp,
+          model: msg.model,
+        };
+
+        // Copy any additional properties
+        Object.keys(msg).forEach(key => {
+          if (!['type', 'message', 'timestamp', 'model'].includes(key)) {
+            (converted as any)[key] = msg[key];
+          }
+        });
+
+        return converted;
+      });
+
+      console.log('[ClaudeCodeSession] Converted messages:', convertedMessages.length);
+      console.log('[ClaudeCodeSession] First converted message:', convertedMessages[0]);
+      console.log('[ClaudeCodeSession] First message type:', convertedMessages[0]?.type);
+      console.log('[ClaudeCodeSession] First message content:', convertedMessages[0]?.message?.content);
+
+      // Update state
+      setMessages(convertedMessages);
+      setClaudeSessionId(sessionId);
+      setIsFirstPrompt(false);
+
+      // Force a re-render by updating a dummy state
+      setTimelineVersion(prev => prev + 1);
+
+      // Scroll to bottom after messages are rendered
+      setTimeout(() => {
+        if (parentRef.current) {
+          parentRef.current.scrollTop = parentRef.current.scrollHeight;
+        }
+      }, 200);
+
+    } catch (err) {
+      console.error("[ClaudeCodeSession] Failed to load session:", err);
+      setError(`Failed to load session: ${err}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Call onProjectPathChange when component mounts with initial path
   useEffect(() => {
     if (onProjectPathChange && projectPath) {
       onProjectPathChange(projectPath);
     }
   }, []); // Only run on mount
-  
+
   // Keep ref in sync with state
   useEffect(() => {
     queuedPromptsRef.current = queuedPrompts;
@@ -1406,11 +1519,19 @@ export const ClaudeCodeSession = forwardRef<ClaudeCodeSessionRef, ClaudeCodeSess
         {/* Sidebar Header */}
         {sidebarMode && (
           <div className="h-10 bg-[#2d2d2d] border-b border-[#2d2d30] flex items-center justify-between px-3 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-[#007acc]" />
-              <span className="text-sm text-[#cccccc] font-medium">Claude</span>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Terminal className="w-4 h-4 text-[#007acc] flex-shrink-0" />
+              <span className="text-sm text-[#cccccc] font-medium flex-shrink-0">Claude</span>
+              {projectId && (
+                <ClaudeSessionSelector
+                  projectId={projectId}
+                  currentSessionId={claudeSessionId}
+                  onSessionSelect={handleSessionSelect}
+                  className="ml-2"
+                />
+              )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 flex-shrink-0">
               {extraHeaderActions}
             </div>
           </div>

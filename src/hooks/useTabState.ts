@@ -20,11 +20,9 @@ interface UseTabStateReturn {
   createUsageTab: () => string | null;
   createMCPTab: () => string | null;
   createSettingsTab: () => string | null;
-  createClaudeMdTab: () => string | null;
   createClaudeFileTab: (fileId: string, fileName: string) => string;
   createCreateAgentTab: () => string;
   createImportAgentTab: () => string;
-  createCodeEditorTab: (projectPath?: string) => string;
   closeTab: (id: string, force?: boolean) => Promise<boolean>;
   closeCurrentTab: () => Promise<boolean>;
   switchToTab: (id: string) => void;
@@ -172,23 +170,6 @@ export const useTabState = (): UseTabStateReturn => {
     });
   }, [addTab, tabs, setActiveTab]);
 
-  const createClaudeMdTab = useCallback((): string | null => {
-    // Check if claude-md tab already exists (singleton)
-    const existingTab = tabs.find(tab => tab.type === 'claude-md');
-    if (existingTab) {
-      setActiveTab(existingTab.id);
-      return existingTab.id;
-    }
-
-    return addTab({
-      type: 'claude-md',
-      title: 'CLAUDE.md',
-      status: 'idle',
-      hasUnsavedChanges: false,
-      icon: 'file-text'
-    });
-  }, [addTab, tabs, setActiveTab]);
-
   const createClaudeFileTab = useCallback((fileId: string, fileName: string): string => {
     // Check if tab already exists for this file
     const existingTab = tabs.find(tab => tab.type === 'claude-file' && tab.claudeFileId === fileId);
@@ -253,32 +234,7 @@ export const useTabState = (): UseTabStateReturn => {
     });
   }, [addTab, tabs, setActiveTab]);
 
-  const createCodeEditorTab = useCallback((projectPath?: string): string => {
-    // If projectPath is provided, check if tab already exists for this project
-    if (projectPath) {
-      const existingTab = tabs.find(tab =>
-        tab.type === 'code-editor' && tab.projectDirectory === projectPath
-      );
-      if (existingTab) {
-        setActiveTab(existingTab.id);
-        return existingTab.id;
-      }
-    }
 
-    // Extract project name from path
-    const projectName = projectPath
-      ? projectPath.split(/[/\\]/).pop() || 'Code Editor'
-      : 'Code Editor';
-
-    return addTab({
-      type: 'code-editor',
-      title: projectName,
-      projectDirectory: projectPath,
-      status: 'idle',
-      hasUnsavedChanges: false,
-      icon: 'code'
-    });
-  }, [addTab, tabs, setActiveTab]);
 
   const closeTab = useCallback(async (id: string, force: boolean = false): Promise<boolean> => {
     const tab = getTabById(id);
@@ -368,11 +324,9 @@ export const useTabState = (): UseTabStateReturn => {
     createUsageTab,
     createMCPTab,
     createSettingsTab,
-    createClaudeMdTab,
     createClaudeFileTab,
     createCreateAgentTab,
     createImportAgentTab,
-    createCodeEditorTab,
     closeTab,
     closeCurrentTab,
     switchToTab: setActiveTab,

@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Bot, FolderCode } from "lucide-react";
 import { api, type Project, type Session, type ClaudeMdFile } from "@/lib/api";
 import { OutputCacheProvider } from "@/lib/outputCache";
 import { TabProvider } from "@/contexts/TabContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Card } from "@/components/ui/card";
 import { ProjectList } from "@/components/ProjectList";
 import { FilePicker } from "@/components/FilePicker";
 import { SessionList } from "@/components/SessionList";
@@ -25,6 +22,7 @@ import { TabContent } from "@/components/TabContent";
 import { useTabState } from "@/hooks/useTabState";
 import { useAppLifecycle, useTrackEvent } from "@/hooks";
 import { StartupIntro } from "@/components/StartupIntro";
+import { CodeEditorWithClaude } from "@/components/CodeEditor";
 
 type View =
   | "welcome"
@@ -40,14 +38,14 @@ type View =
   | "mcp"
   | "usage-dashboard"
   | "project-settings"
-  | "tabs"; // Tab-based interface
+  | "tabs"; // Tab-based interface for auxiliary functions only
 
 /**
  * AppContent component - Contains the main app logic, wrapped by providers
  */
 function AppContent() {
-  const [view, setView] = useState<View>("tabs");
-  const { createClaudeMdTab, createSettingsTab, createUsageTab, createMCPTab, createAgentsTab, createCodeEditorTab } = useTabState();
+  const [view, setView] = useState<View>("welcome");
+  const { createSettingsTab, createUsageTab, createMCPTab, createAgentsTab } = useTabState();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -229,61 +227,14 @@ function AppContent() {
   const renderContent = () => {
     switch (view) {
       case "welcome":
+        // Main Code Editor view (like Cursor/Augment)
+        // CodeEditorWithClaude will show WelcomePage if no project is selected
         return (
-          <div className="flex items-center justify-center p-4" style={{ height: "100%" }}>
-            <div className="w-full max-w-4xl">
-              {/* Welcome Header */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.15 }}
-                className="mb-12 text-center"
-              >
-                <h1 className="text-4xl font-bold tracking-tight">
-                  <span className="rotating-symbol"></span>
-                  Welcome to opcode
-                </h1>
-              </motion.div>
-
-              {/* Navigation Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                {/* CC Agents Card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.15, delay: 0.05 }}
-                >
-                  <Card 
-                    className="h-64 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg border border-border/50 shimmer-hover trailing-border"
-                    onClick={() => handleViewChange("cc-agents")}
-                  >
-                    <div className="h-full flex flex-col items-center justify-center p-8">
-                      <Bot className="h-16 w-16 mb-4 text-primary" />
-                      <h2 className="text-xl font-semibold">CC Agents</h2>
-                    </div>
-                  </Card>
-                </motion.div>
-
-                {/* Projects Card */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.15, delay: 0.1 }}
-                >
-                  <Card 
-                    className="h-64 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg border border-border/50 shimmer-hover trailing-border"
-                    onClick={() => handleViewChange("projects")}
-                  >
-                    <div className="h-full flex flex-col items-center justify-center p-8">
-                      <FolderCode className="h-16 w-16 mb-4 text-primary" />
-                      <h2 className="text-xl font-semibold">Projects</h2>
-                    </div>
-                  </Card>
-                </motion.div>
-
-              </div>
-            </div>
-          </div>
+          <CodeEditorWithClaude
+            initialDirectory={selectedProject?.path}
+            sessionId={selectedProject?.id}
+            projectId={selectedProject?.id}
+          />
         );
 
       case "cc-agents":
@@ -381,10 +332,6 @@ function AppContent() {
           createUsageTab();
           setView("tabs");
         }}
-        onClaudeClick={() => {
-          createClaudeMdTab();
-          setView("tabs");
-        }}
         onMCPClick={() => {
           createMCPTab();
           setView("tabs");
@@ -394,10 +341,7 @@ function AppContent() {
           setView("tabs");
         }}
         onInfoClick={() => setShowNFO(true)}
-        onCodeEditorClick={() => {
-          createCodeEditorTab();
-          setView("tabs");
-        }}
+        onCodeEditorClick={() => setView("welcome")}
       />
       
       {/* Topbar - Commented out since navigation moved to titlebar */}

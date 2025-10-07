@@ -399,6 +399,9 @@ pub async fn list_projects() -> Result<Vec<Project>, String> {
                 }
             }
 
+            log::info!("[list_projects] Project: {} - created_at: {}, most_recent_session: {:?}",
+                dir_name, created_at, most_recent_session);
+
             projects.push(Project {
                 id: dir_name.to_string(),
                 path: project_path,

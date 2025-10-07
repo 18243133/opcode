@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import { FolderOpen, Clock, X, Code2 } from 'lucide-react';
+import { FolderOpen, Clock, Code2, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-export interface RecentWorkspace {
-  path: string;
-  name: string;
-  lastOpened: number;
-}
+import type { RecentClaudeSession } from '@/hooks/editor/useRecentClaudeSessions';
 
 export interface WelcomePageProps {
   /**
@@ -15,17 +10,17 @@ export interface WelcomePageProps {
    */
   onOpenFolder: () => void;
   /**
-   * Callback when user opens a recent workspace
+   * Callback when user opens a recent Claude project
    */
-  onOpenRecent: (path: string) => void;
+  onOpenSession: (projectId: string, projectPath: string, actualProjectId: string) => void;
   /**
-   * Recent workspaces
+   * Recent Claude projects
    */
-  recentWorkspaces?: RecentWorkspace[];
+  recentSessions?: RecentClaudeSession[];
   /**
-   * Callback to remove a recent workspace
+   * Loading state
    */
-  onRemoveRecent?: (path: string) => void;
+  isLoadingSessions?: boolean;
 }
 
 /**
@@ -33,15 +28,17 @@ export interface WelcomePageProps {
  */
 export const WelcomePage: React.FC<WelcomePageProps> = ({
   onOpenFolder,
-  onOpenRecent,
-  recentWorkspaces = [],
-  onRemoveRecent,
+  onOpenSession,
+  recentSessions = [],
+  isLoadingSessions = false,
 }) => {
-  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+  const [hoveredProjectId, setHoveredProjectId] = useState<string | null>(null);
 
   const formatDate = (timestamp: number) => {
+    // Convert Unix timestamp (seconds) to milliseconds
+    const timestampMs = timestamp * 1000;
     const now = Date.now();
-    const diff = now - timestamp;
+    const diff = now - timestampMs;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -50,8 +47,8 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
     if (minutes < 60) return `${minutes}分钟前`;
     if (hours < 24) return `${hours}小时前`;
     if (days < 7) return `${days}天前`;
-    
-    const date = new Date(timestamp);
+
+    const date = new Date(timestampMs);
     return date.toLocaleDateString('zh-CN');
   };
 
@@ -106,77 +103,57 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
           </Button>
         </div>
 
-        {/* Recent Workspaces */}
+        {/* Recent Claude Projects */}
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-[#888]" />
-            <h2 className="text-xl font-light">最近打开</h2>
+            <h2 className="text-xl font-light">最近的Claude项目</h2>
           </div>
 
-          {recentWorkspaces.length > 0 ? (
+          {isLoadingSessions ? (
+            <div className="p-8 text-center text-[#888] bg-[#252526] rounded-md border border-[#2d2d30]">
+              <p className="text-sm">加载中...</p>
+            </div>
+          ) : recentSessions.length > 0 ? (
             <div className="space-y-2">
-              {recentWorkspaces.map((workspace) => (
+              {recentSessions.map((project) => (
                 <div
-                  key={workspace.path}
+                  key={project.projectId}
                   className={cn(
                     "group relative flex items-center justify-between p-3 rounded-md transition-colors cursor-pointer",
-                    hoveredPath === workspace.path
+                    hoveredProjectId === project.projectId
                       ? "bg-[#2d2d30]"
                       : "hover:bg-[#2d2d30]"
                   )}
-                  onMouseEnter={() => setHoveredPath(workspace.path)}
-                  onMouseLeave={() => setHoveredPath(null)}
-                  onClick={() => onOpenRecent(workspace.path)}
+                  onMouseEnter={() => setHoveredProjectId(project.projectId)}
+                  onMouseLeave={() => setHoveredProjectId(null)}
+                  onClick={() => onOpenSession(project.projectId, project.projectPath, project.projectId)}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <FolderOpen className="w-5 h-5 text-[#007acc] flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{workspace.name}</div>
-                      <div className="text-sm text-[#888] truncate">{workspace.path}</div>
+                      <div className="font-medium truncate">
+                        {project.projectName}
+                      </div>
+                      <div className="text-sm text-[#888] truncate">
+                        {project.projectPath} • {project.sessionCount} 个会话
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-[#888]">
-                      {formatDate(workspace.lastOpened)}
+                      {formatDate(project.mostRecentSessionTime)}
                     </span>
-                    
-                    {onRemoveRecent && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveRecent(workspace.path);
-                        }}
-                        className={cn(
-                          "p-1 rounded hover:bg-[#3e3e42] transition-opacity",
-                          hoveredPath === workspace.path ? "opacity-100" : "opacity-0"
-                        )}
-                        title="从列表中移除"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="p-8 text-center text-[#888] bg-[#252526] rounded-md border border-[#2d2d30]">
-              <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">还没有打开过任何项目</p>
-              <p className="text-xs mt-2">点击上方"打开项目"按钮开始</p>
-            </div>
-          )}
-
-          {recentWorkspaces.length > 5 && (
-            <div className="mt-4 text-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-[#007acc] hover:text-[#007acc] hover:bg-[#2d2d30]"
-              >
-                更多...
-              </Button>
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">还没有Claude对话历史</p>
+              <p className="text-xs mt-2">打开项目后开始与Claude对话</p>
             </div>
           )}
         </div>

@@ -7,3 +7,6 @@ export type { FileEntry, UseFileOperationsReturn } from './useFileOperations';
 export { useRecentWorkspaces } from './useRecentWorkspaces';
 export type { RecentWorkspace } from './useRecentWorkspaces';
 
+export { useRecentClaudeSessions } from './useRecentClaudeSessions';
+export type { RecentClaudeSession } from './useRecentClaudeSessions';
+

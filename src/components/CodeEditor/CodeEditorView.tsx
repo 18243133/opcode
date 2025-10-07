@@ -7,10 +7,15 @@ import { WelcomePage } from './WelcomePage';
 import type { FileNode } from './FileTree';
 import { useEditorTabs } from '@/hooks/editor/useEditorTabs';
 import { useFileOperations } from '@/hooks/editor/useFileOperations';
-import { useRecentWorkspaces } from '@/hooks/editor/useRecentWorkspaces';
+import { useRecentClaudeSessions } from '@/hooks/editor/useRecentClaudeSessions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import {
+  loadProjectFileHistory,
+  saveProjectFileHistory,
+  cleanupOldHistories
+} from '@/services/projectFileHistory';
 
 export interface CodeEditorViewProps {
   /**
@@ -25,6 +30,10 @@ export interface CodeEditorViewProps {
    * Callback when project directory changes
    */
   onProjectChange?: (projectPath: string) => void;
+  /**
+   * Callback when a Claude project is opened from welcome page
+   */
+  onOpenSession?: (projectId: string, projectPath: string, actualProjectId: string) => void;
   /**
    * Custom className
    */
@@ -44,6 +53,7 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
   initialDirectory,
   onFileOpen,
   onProjectChange,
+  onOpenSession,
   className,
 }) => {
   const [fileTree, setFileTree] = useState<FileNode | null>(null);
@@ -52,7 +62,7 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
   const [isLoadingTree, setIsLoadingTree] = useState(false);
 
   const fileOps = useFileOperations();
-  const { recentWorkspaces, addRecentWorkspace, removeRecentWorkspace } = useRecentWorkspaces();
+  const { recentSessions, isLoading: isLoadingSessions } = useRecentClaudeSessions(10);
   
   const {
     tabs,
@@ -82,16 +92,39 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
       const tree = await fileOps.listDirectoryTree(dirPath, 5);
       setFileTree(tree);
       setCurrentDirectory(dirPath);
-      // Add to recent workspaces
-      addRecentWorkspace(dirPath);
       // Notify parent component
       onProjectChange?.(dirPath);
+
+      // Restore previously opened files
+      const history = loadProjectFileHistory(dirPath);
+      if (history && history.openFiles.length > 0) {
+        console.log('[CodeEditorView] Restoring', history.openFiles.length, 'files');
+
+        // Open files in sequence
+        for (const filePath of history.openFiles) {
+          try {
+            const content = await fileOps.readFile(filePath);
+            const language = getLanguageFromPath(filePath);
+            openFile(filePath, content, language);
+          } catch (err) {
+            console.error('[CodeEditorView] Failed to restore file:', filePath, err);
+          }
+        }
+
+        // Set active file if specified
+        if (history.activeFile) {
+          const activeTabToSet = tabs.find(t => t.filePath === history.activeFile);
+          if (activeTabToSet) {
+            setActiveTabId(activeTabToSet.id);
+          }
+        }
+      }
     } catch (error) {
       console.error('Failed to load directory tree:', error);
     } finally {
       setIsLoadingTree(false);
     }
-  }, [fileOps, addRecentWorkspace, onProjectChange]);
+  }, [fileOps, onProjectChange, openFile, tabs, setActiveTabId]);
 
   /**
    * Handle file click in tree
@@ -126,6 +159,24 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
       console.error('[CodeEditorView] Failed to open file:', error);
     }
   }, [fileOps, openFile, onFileOpen]);
+
+  /**
+   * Save open files history when tabs change
+   */
+  useEffect(() => {
+    if (currentDirectory && tabs.length > 0) {
+      const openFiles = tabs.map(tab => tab.filePath);
+      const activeFile = activeTab?.filePath;
+      saveProjectFileHistory(currentDirectory, openFiles, activeFile);
+    }
+  }, [tabs, activeTab, currentDirectory]);
+
+  /**
+   * Cleanup old histories on mount
+   */
+  useEffect(() => {
+    cleanupOldHistories();
+  }, []);
 
   /**
    * Handle save shortcut
@@ -187,9 +238,15 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
       {!currentDirectory && tabs.length === 0 ? (
         <WelcomePage
           onOpenFolder={handleSelectDirectory}
-          onOpenRecent={(path) => loadDirectoryTree(path)}
-          recentWorkspaces={recentWorkspaces}
-          onRemoveRecent={removeRecentWorkspace}
+          onOpenSession={(projectId, projectPath, actualProjectId) => {
+            console.log('[CodeEditorView] Opening Claude project:', { projectId, projectPath, actualProjectId });
+            // Load the project directory in the editor
+            loadDirectoryTree(projectPath);
+            // Notify parent to open project in Claude sidebar
+            onOpenSession?.(projectId, projectPath, actualProjectId);
+          }}
+          recentSessions={recentSessions}
+          isLoadingSessions={isLoadingSessions}
         />
       ) : (
         <>

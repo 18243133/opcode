@@ -67,6 +67,8 @@ export const CodeEditorWithClaude: React.FC<CodeEditorWithClaudeProps> = ({
 
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
   const [currentFileContent, setCurrentFileContent] = useState<string>('');
+  const [currentProjectPath, setCurrentProjectPath] = useState<string | undefined>(initialDirectory);
+  const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(undefined);
   const isDragging = useRef(false);
   const claudeSessionRef = useRef<ClaudeCodeSessionRef>(null);
 
@@ -93,6 +95,23 @@ export const CodeEditorWithClaude: React.FC<CodeEditorWithClaudeProps> = ({
       onFileOpen(filePath, content);
     }
   }, [onFileOpen]);
+
+  /**
+   * Handle opening a Claude project from welcome page
+   */
+  const handleOpenSession = useCallback((_projectId: string, projectPath: string, actualProjectId: string) => {
+    // Update project path for Claude (pass actualProjectId for session loading)
+    setCurrentProjectPath(projectPath);
+    setCurrentProjectId(actualProjectId);
+
+    // Show Claude panel if hidden
+    if (!showClaude) {
+      setShowClaude(true);
+    }
+
+    // Notify parent component
+    onProjectChange?.(projectPath);
+  }, [showClaude, onProjectChange]);
 
   /**
    * Get language from file path
@@ -224,6 +243,7 @@ Please review this code and let me know if you have any suggestions.`;
           initialDirectory={initialDirectory}
           onFileOpen={handleFileOpen}
           onProjectChange={onProjectChange}
+          onOpenSession={handleOpenSession}
         />
       </div>
 
@@ -244,7 +264,8 @@ Please review this code and let me know if you have any suggestions.`;
           {/* Claude session with sidebar mode */}
           <ClaudeCodeSession
             ref={claudeSessionRef}
-            initialProjectPath={initialDirectory}
+            initialProjectPath={currentProjectPath}
+            initialProjectId={currentProjectId}
             sidebarMode={true}
             onBack={() => {}}
             className="flex-1"
