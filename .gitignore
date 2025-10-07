@@ -37,3 +37,11 @@ CLAUDE.md
 .claude/
 
 .env
+
+# Exclude all markdown files except README files
+*.md
+!README.md
+!README.zh-CN.md
+
+# Exclude Augment related files
+.augment*
