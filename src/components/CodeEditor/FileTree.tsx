@@ -1,7 +1,21 @@
 import React, { useState, useCallback } from 'react';
-import { ChevronRight, Folder, FolderOpen } from 'lucide-react';
+import {
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  FilePlus,
+  FolderPlus,
+  Edit2,
+  Trash2,
+  Copy,
+  ExternalLink
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getFileIcon } from './MonacoEditor';
+import { ContextMenu, ContextMenuItem } from './ContextMenu';
+import { FileOperationDialog, FileOperationType } from './FileOperationDialog';
+import { AnimatePresence } from 'framer-motion';
+import { invoke } from '@tauri-apps/api/core';
 
 export interface FileNode {
   name: string;
@@ -16,16 +30,18 @@ export interface FileTreeProps {
   onFolderClick?: (path: string) => void;
   selectedPath?: string;
   className?: string;
+  onRefresh?: () => void;
 }
 
 /**
- * FileTree component - Hierarchical file browser
- * 
+ * FileTree component - Hierarchical file browser with context menu support
+ *
  * @example
  * <FileTree
  *   root={fileTree}
  *   onFileClick={handleFileClick}
  *   selectedPath={currentFilePath}
+ *   onRefresh={() => reloadTree()}
  * />
  */
 export const FileTree: React.FC<FileTreeProps> = ({
@@ -34,8 +50,17 @@ export const FileTree: React.FC<FileTreeProps> = ({
   onFolderClick,
   selectedPath,
   className,
+  onRefresh,
 }) => {
   const [expanded, setExpanded] = useState<Set<string>>(new Set([root.path]));
+  const [contextMenu, setContextMenu] = useState<{
+    position: { x: number; y: number };
+    node: FileNode;
+  } | null>(null);
+  const [operationDialog, setOperationDialog] = useState<{
+    type: FileOperationType;
+    node: FileNode;
+  } | null>(null);
 
   const toggleExpand = useCallback((path: string) => {
     setExpanded(prev => {
@@ -57,6 +82,132 @@ export const FileTree: React.FC<FileTreeProps> = ({
       onFileClick(node.path);
     }
   }, [toggleExpand, onFileClick, onFolderClick]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, node: FileNode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      position: { x: e.clientX, y: e.clientY },
+      node
+    });
+  }, []);
+
+  const getContextMenuItems = useCallback((node: FileNode): ContextMenuItem[] => {
+    const items: ContextMenuItem[] = [];
+
+    // New File/Folder (only for directories)
+    if (node.isDirectory) {
+      items.push({
+        id: 'new-file',
+        label: '新建文件',
+        icon: <FilePlus className="h-4 w-4" />,
+        action: () => setOperationDialog({ type: 'create-file', node })
+      });
+      items.push({
+        id: 'new-folder',
+        label: '新建文件夹',
+        icon: <FolderPlus className="h-4 w-4" />,
+        action: () => setOperationDialog({ type: 'create-folder', node })
+      });
+      items.push({ id: 'sep1', separator: true });
+    }
+
+    // Rename
+    items.push({
+      id: 'rename',
+      label: '重命名',
+      icon: <Edit2 className="h-4 w-4" />,
+      shortcut: 'F2',
+      action: () => setOperationDialog({ type: 'rename', node })
+    });
+
+    // Delete
+    items.push({
+      id: 'delete',
+      label: '删除',
+      icon: <Trash2 className="h-4 w-4" />,
+      shortcut: 'Del',
+      danger: true,
+      action: () => setOperationDialog({ type: 'delete', node })
+    });
+
+    items.push({ id: 'sep2', separator: true });
+
+    // Copy Path
+    items.push({
+      id: 'copy-path',
+      label: '复制路径',
+      icon: <Copy className="h-4 w-4" />,
+      action: async () => {
+        await navigator.clipboard.writeText(node.path);
+      }
+    });
+
+    // Copy Relative Path
+    items.push({
+      id: 'copy-relative-path',
+      label: '复制相对路径',
+      icon: <Copy className="h-4 w-4" />,
+      action: async () => {
+        const relativePath = node.path.replace(root.path, '').replace(/^[/\\]/, '');
+        await navigator.clipboard.writeText(relativePath);
+      }
+    });
+
+    items.push({ id: 'sep3', separator: true });
+
+    // Reveal in Explorer
+    items.push({
+      id: 'reveal',
+      label: '在文件管理器中显示',
+      icon: <ExternalLink className="h-4 w-4" />,
+      action: async () => {
+        try {
+          await invoke('reveal_in_explorer', { path: node.path });
+        } catch (err) {
+          console.error('Failed to reveal in explorer:', err);
+        }
+      }
+    });
+
+    return items;
+  }, [root.path]);
+
+  const handleFileOperation = useCallback(async (type: FileOperationType, node: FileNode, newName?: string) => {
+    try {
+      switch (type) {
+        case 'create-file': {
+          if (!newName) return;
+          const newPath = `${node.path}/${newName}`;
+          await invoke('create_file', { path: newPath });
+          break;
+        }
+        case 'create-folder': {
+          if (!newName) return;
+          const newPath = `${node.path}/${newName}`;
+          await invoke('create_directory', { path: newPath });
+          break;
+        }
+        case 'rename': {
+          if (!newName) return;
+          const parentPath = node.path.substring(0, node.path.lastIndexOf('/'));
+          const newPath = `${parentPath}/${newName}`;
+          await invoke('rename_file', { oldPath: node.path, newPath });
+          break;
+        }
+        case 'delete': {
+          await invoke('delete_file', { path: node.path });
+          break;
+        }
+      }
+
+      // Refresh the file tree
+      onRefresh?.();
+    } catch (err) {
+      console.error('File operation failed:', err);
+      throw err;
+    }
+  }, [onRefresh]);
 
   const renderNode = (node: FileNode, level: number = 0): React.ReactNode => {
     const isExpanded = expanded.has(node.path);
@@ -81,6 +232,7 @@ export const FileTree: React.FC<FileTreeProps> = ({
           )}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
           onClick={() => handleNodeClick(node)}
+          onContextMenu={(e) => handleContextMenu(e, node)}
           title={node.path}
         >
           {/* Chevron for directories */}
@@ -120,9 +272,38 @@ export const FileTree: React.FC<FileTreeProps> = ({
   };
 
   return (
-    <div className={cn("py-2 overflow-y-auto", className)}>
-      {renderNode(root)}
-    </div>
+    <>
+      <div className={cn("py-2 overflow-y-auto", className)}>
+        {renderNode(root)}
+      </div>
+
+      {/* Context Menu */}
+      <AnimatePresence>
+        {contextMenu && (
+          <ContextMenu
+            items={getContextMenuItems(contextMenu.node)}
+            position={contextMenu.position}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* File Operation Dialog */}
+      {operationDialog && (
+        <FileOperationDialog
+          type={operationDialog.type}
+          currentPath={operationDialog.node.path}
+          currentName={operationDialog.node.name}
+          isDirectory={operationDialog.node.isDirectory}
+          onConfirm={async (newName) => {
+            await handleFileOperation(operationDialog.type, operationDialog.node, newName);
+            setOperationDialog(null);
+          }}
+          onCancel={() => setOperationDialog(null)}
+          open={true}
+        />
+      )}
+    </>
   );
 };
 

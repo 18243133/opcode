@@ -276,3 +276,66 @@ pub async fn get_file_metadata(path: String) -> Result<FileEntry, String> {
     })
 }
 
+/// Reveal file/folder in system file explorer
+#[tauri::command]
+pub async fn reveal_in_explorer(path: String) -> Result<(), String> {
+    log::info!("Revealing in explorer: {}", path);
+
+    let path_obj = Path::new(&path);
+
+    // Check if path exists
+    if !path_obj.exists() {
+        return Err(format!("Path does not exist: {}", path));
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+
+        // Use explorer.exe /select to highlight the file
+        let result = Command::new("explorer")
+            .args(&["/select,", &path])
+            .spawn();
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to open explorer: {}", e))
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+
+        // Use 'open -R' to reveal in Finder
+        let result = Command::new("open")
+            .args(&["-R", &path])
+            .spawn();
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to open Finder: {}", e))
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::Command;
+
+        // Try different file managers
+        let file_managers = vec![
+            ("nautilus", vec!["--select", &path]),
+            ("dolphin", vec!["--select", &path]),
+            ("thunar", vec![&path]),
+            ("xdg-open", vec![path_obj.parent().unwrap_or(path_obj).to_str().unwrap()]),
+        ];
+
+        for (manager, args) in file_managers {
+            if let Ok(_) = Command::new(manager).args(&args).spawn() {
+                return Ok(());
+            }
+        }
+
+        Err("No supported file manager found".to_string())
+    }
+}

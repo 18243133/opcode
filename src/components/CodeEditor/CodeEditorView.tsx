@@ -291,6 +291,7 @@ export const CodeEditorView: React.FC<CodeEditorViewProps> = ({
               root={fileTree}
               onFileClick={handleFileClick}
               selectedPath={activeTab?.filePath}
+              onRefresh={() => loadDirectoryTree(currentDirectory!)}
             />
           ) : (
             <div className="p-4 text-center text-sm text-[#888]">
