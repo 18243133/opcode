@@ -263,12 +263,27 @@ export const ClaudeCodeSession = forwardRef<ClaudeCodeSessionRef, ClaudeCodeSess
       // Force a re-render by updating a dummy state
       setTimelineVersion(prev => prev + 1);
 
-      // Scroll to bottom after messages are rendered
+      // Reset auto-scroll state and scroll to bottom after messages are rendered
+      setUserHasScrolledUp(false);
+
+      // Scroll to bottom with multiple attempts to ensure it works
       setTimeout(() => {
         if (parentRef.current) {
           parentRef.current.scrollTop = parentRef.current.scrollHeight;
         }
-      }, 200);
+      }, 100);
+
+      setTimeout(() => {
+        if (parentRef.current) {
+          parentRef.current.scrollTop = parentRef.current.scrollHeight;
+        }
+      }, 300);
+
+      setTimeout(() => {
+        if (parentRef.current) {
+          parentRef.current.scrollTop = parentRef.current.scrollHeight;
+        }
+      }, 500);
 
     } catch (err) {
       console.error("[ClaudeCodeSession] Failed to load session:", err);
@@ -440,17 +455,40 @@ export const ClaudeCodeSession = forwardRef<ClaudeCodeSessionRef, ClaudeCodeSess
     if (displayableMessages.length > 0 && !userHasScrolledUp) {
       // Use a small delay to ensure DOM is updated
       const timeoutId = setTimeout(() => {
-        if (parentRef.current) {
+        if (parentRef.current && !userHasScrolledUp) {
           // Scroll to bottom of container
           parentRef.current.scrollTo({
             top: parentRef.current.scrollHeight,
             behavior: 'smooth'
           });
         }
-      }, 100);
+      }, 50);
       return () => clearTimeout(timeoutId);
     }
-  }, [messages, userHasScrolledUp]); // Changed to depend on messages array instead of length
+  }, [messages, userHasScrolledUp, displayableMessages.length]); // Depend on messages and displayableMessages length
+
+  // Additional auto-scroll for streaming messages (more aggressive)
+  useEffect(() => {
+    if (isLoading && !userHasScrolledUp) {
+      // During streaming, scroll more frequently
+      const intervalId = setInterval(() => {
+        if (parentRef.current && !userHasScrolledUp) {
+          const { scrollTop, scrollHeight, clientHeight } = parentRef.current;
+          const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+          // Only scroll if we're close to the bottom (within 200px)
+          if (distanceFromBottom < 200) {
+            parentRef.current.scrollTo({
+              top: scrollHeight,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }, 100); // Check every 100ms during streaming
+
+      return () => clearInterval(intervalId);
+    }
+  }, [isLoading, userHasScrolledUp]);
 
   // Get current loading status based on last message
   const getLoadingStatus = () => {
